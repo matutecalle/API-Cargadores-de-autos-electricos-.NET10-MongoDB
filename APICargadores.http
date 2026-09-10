@@ -1,0 +1,6 @@
+@APICargadores_HostAddress = http://localhost:5134
+
+GET {{APICargadores_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

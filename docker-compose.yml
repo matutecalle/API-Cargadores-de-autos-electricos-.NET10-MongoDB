@@ -1,0 +1,29 @@
+# Levanta la API junto con una base MongoDB local: docker compose up --build
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Development habilita Swagger y toma la config de appsettings.Development.json
+      ASPNETCORE_ENVIRONMENT: Development
+      # Sobrescribe MongoDb:ConnectionString para apuntar al contenedor de Mongo
+      MongoDb__ConnectionString: mongodb://mongo:27017
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:

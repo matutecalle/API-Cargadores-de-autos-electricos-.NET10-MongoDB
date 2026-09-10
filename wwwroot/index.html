@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cargadores EV</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --accent: #1d4ed8;
+    --accent-dark: #1e40af;
+    --accent-soft: #eff6ff;
+    --ok: #15803d; --ok-bg: #f0fdf4;
+    --warn: #b45309; --warn-bg: #fffbeb;
+    --bad: #b91c1c; --bad-bg: #fef2f2;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px; -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+  button { font-family: inherit; cursor: pointer; }
+  code { font-size: 13px; background: #f3f4f6; padding: 1px 5px; border-radius: 4px; }
+
+  /* ---------- Top bar ---------- */
+  header.topbar { position: sticky; top: 0; z-index: 40; background: var(--card); border-bottom: 1px solid var(--border); }
+  .topbar-inner { max-width: 1120px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 16px; }
+  .brand { font-weight: 700; font-size: 16px; line-height: 1.2; }
+  .brand small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+  .spacer { flex: 1; }
+  .auth-area { display: flex; align-items: center; gap: 12px; }
+  .auth-area .who { text-align: right; line-height: 1.25; }
+  .auth-area .who b { display: block; }
+  .auth-area .who span { font-size: 12px; color: var(--muted); }
+  .role-chip { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: #f3f4f6; color: var(--muted); border: 1px solid var(--border); }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    border: 1px solid var(--border-strong); background: var(--card); color: var(--ink);
+    padding: 8px 14px; border-radius: 6px; font-size: 14px; font-weight: 500; white-space: nowrap;
+  }
+  .btn:hover { background: #f9fafb; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .btn.sm { padding: 5px 10px; font-size: 13px; }
+  .btn.danger { background: var(--card); border-color: #fca5a5; color: var(--bad); }
+  .btn.danger:hover { background: var(--bad-bg); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ---------- Tabs ---------- */
+  nav.tabs { background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 57px; z-index: 30; }
+  .tabs-inner { max-width: 1120px; margin: 0 auto; padding: 0 20px; display: flex; gap: 4px; }
+  .tab {
+    border: none; background: none; padding: 12px 14px; font-size: 14px; font-weight: 500;
+    color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+  .tab.hidden { display: none; }
+
+  /* ---------- Layout ---------- */
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 60px; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .view-head { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+  .view-sub { margin: 0 0 20px; color: var(--muted); }
+
+  /* ---------- Filters ---------- */
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .field input, .field select {
+    padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 14px; background: var(--card); color: var(--ink);
+  }
+  .field input:focus, .field select:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; height: 36px; }
+  .checkbox-row input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+  /* ---------- Cards grid ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; margin-top: 20px; }
+  .station { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .station .row1 { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .station .code { font-weight: 600; font-size: 15px; }
+  .station .addr { color: var(--muted); font-size: 13px; line-height: 1.35; }
+  .badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .badge.bad { background: var(--bad-bg); color: var(--bad); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12px; background: #f9fafb; border: 1px solid var(--border); color: #4b5563; padding: 2px 8px; border-radius: 4px; }
+  .chip.renewable { background: var(--ok-bg); color: var(--ok); border-color: #bbf7d0; }
+  .station .meta { display: flex; align-items: baseline; gap: 16px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .station .price { font-size: 17px; font-weight: 600; color: var(--ink); }
+  .station .price small { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .station .actions { display: flex; gap: 8px; margin-top: 2px; }
+  .dist { font-size: 12px; font-weight: 500; color: var(--accent); margin-left: 6px; }
+
+  /* ---------- Pagination ---------- */
+  .pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 24px; }
+  .pager .info { color: var(--muted); }
+
+  /* ---------- Tables ---------- */
+  table.data { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  table.data th, table.data td { text-align: left; padding: 10px 14px; font-size: 13.5px; border-bottom: 1px solid var(--border); }
+  table.data th { background: #f9fafb; color: var(--muted); font-size: 12px; font-weight: 500; }
+  table.data tr:last-child td { border-bottom: none; }
+  .sub { color: var(--muted); font-size: 12px; }
+
+  /* ---------- Sessions ---------- */
+  .active-session { border-left: 3px solid var(--accent); margin-bottom: 12px; }
+  .active-session .row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .active-session .title { font-weight: 600; }
+  .active-session .when { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .active-session .controls { display: flex; gap: 8px; align-items: center; }
+  .active-session input { width: 110px; padding: 7px 8px; border: 1px solid var(--border-strong); border-radius: 6px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 8px; vertical-align: middle; }
+
+  /* ---------- Admin ---------- */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat .v { font-size: 24px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .bars { display: flex; flex-direction: column; gap: 8px; }
+  .bar-row { display: grid; grid-template-columns: 90px 1fr 50px; align-items: center; gap: 10px; font-size: 13px; }
+  .bar-track { background: #f3f4f6; border-radius: 4px; height: 18px; overflow: hidden; }
+  .bar-fill { background: var(--accent); height: 100%; border-radius: 4px; min-width: 2px; }
+  .section-title { font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
+  .note { color: var(--muted); margin: 0; }
+
+  /* ---------- States ---------- */
+  .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .empty p { margin: 0 0 14px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 40px auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Modal ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(17,24,39,.45); display: none; place-items: center; z-index: 60; padding: 20px; }
+  .overlay.show { display: grid; }
+  .modal { background: var(--card); border-radius: 10px; padding: 24px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,.15); }
+  .modal h3 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  .modal p.hint { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+  .modal .field { margin-bottom: 14px; }
+  .modal .field input { padding: 10px; }
+  .modal .err { background: var(--bad-bg); color: var(--bad); padding: 9px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 14px; display: none; }
+  .modal .foot { display: flex; gap: 10px; margin-top: 6px; }
+  .modal .foot .btn { flex: 1; }
+  .switch-auth { text-align: center; margin-top: 14px; font-size: 13px; color: var(--muted); }
+  .switch-auth a { cursor: pointer; font-weight: 500; }
+  .demo-note { background: #f9fafb; border: 1px solid var(--border); color: var(--muted); font-size: 12px; padding: 8px 10px; border-radius: 6px; margin-bottom: 16px; }
+  .demo-note b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Toasts ---------- */
+  #toasts { position: fixed; bottom: 20px; right: 20px; z-index: 80; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--ink); color: #fff; padding: 11px 14px; border-radius: 6px; font-size: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.18); max-width: 340px; border-left: 3px solid transparent;
+  }
+  .toast.ok { border-left-color: #4ade80; }
+  .toast.err { border-left-color: #f87171; }
+
+  @media (max-width: 560px) {
+    .auth-area .who { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">Cargadores EV<small>Red de estaciones de carga</small></div>
+    <div class="spacer"></div>
+    <div class="auth-area" id="authArea"></div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="tabs-inner">
+    <button class="tab active" data-view="explore">Explorar</button>
+    <button class="tab" data-view="nearby">Cercanos</button>
+    <button class="tab" data-view="sessions">Mis sesiones</button>
+    <button class="tab hidden" data-view="admin" id="adminTab">Administración</button>
+  </div>
+</nav>
+
+<main>
+  <!-- ============ EXPLORE ============ -->
+  <section class="view active" id="view-explore">
+    <h1 class="view-head">Explorar cargadores</h1>
+    <p class="view-sub">Buscá entre las estaciones de la red filtrando por tipo, conector, potencia, costo y estado.</p>
+    <div class="panel">
+      <div class="filters">
+        <div class="field">
+          <label>Tipo de cargador</label>
+          <select id="f-chargerType">
+            <option value="">Todos</option>
+            <option>AC Level 1</option>
+            <option>AC Level 2</option>
+            <option>DC Fast Charger</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Conector</label>
+          <select id="f-connectorType">
+            <option value="">Todos</option>
+            <option>Type 2</option>
+            <option>CCS</option>
+            <option>CHAdeMO</option>
+            <option>Tesla</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Operador</label>
+          <input id="f-operator" placeholder="ej. EVgo" />
+        </div>
+        <div class="field">
+          <label>Potencia mín. (kW)</label>
+          <input id="f-minCap" type="number" min="0" placeholder="ej. 150" />
+        </div>
+        <div class="field">
+          <label>Costo máx. (USD/kWh)</label>
+          <input id="f-maxCost" type="number" min="0" step="0.01" placeholder="ej. 0.30" />
+        </div>
+        <div class="field">
+          <label>Estado</label>
+          <select id="f-status">
+            <option value="">Todos</option>
+            <option value="0">Disponible</option>
+            <option value="1">En uso</option>
+            <option value="2">Fuera de servicio</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="checkbox-row"><input type="checkbox" id="f-renew" /><label for="f-renew" style="color:var(--ink)">Solo energía renovable</label></div>
+        </div>
+        <div class="field">
+          <button class="btn primary" onclick="doSearch(1)">Buscar</button>
+        </div>
+      </div>
+    </div>
+    <div id="explore-results"></div>
+    <div id="explore-pager"></div>
+  </section>
+
+  <!-- ============ NEARBY ============ -->
+  <section class="view" id="view-nearby">
+    <h1 class="view-head">Cargadores cercanos</h1>
+    <p class="view-sub">Estaciones ordenadas por distancia a una coordenada (consulta geoespacial con índice <code>2dsphere</code>).</p>
+    <div class="panel">
+      <div class="filters">
+        <div class="field"><label>Latitud</label><input id="n-lat" type="number" step="any" value="37.7749" /></div>
+        <div class="field"><label>Longitud</label><input id="n-lng" type="number" step="any" value="-122.4194" /></div>
+        <div class="field"><label>Radio máx. (km)</label><input id="n-maxKm" type="number" value="500" /></div>
+        <div class="field"><label>Máx. resultados</label><input id="n-limit" type="number" value="24" /></div>
+        <div class="field"><button class="btn" onclick="useMyLocation()">Usar mi ubicación</button></div>
+        <div class="field"><button class="btn primary" onclick="doNearby()">Buscar</button></div>
+      </div>
+    </div>
+    <div id="nearby-results"></div>
+  </section>
+
+  <!-- ============ SESSIONS ============ -->
+  <section class="view" id="view-sessions">
+    <h1 class="view-head">Mis sesiones de carga</h1>
+    <p class="view-sub">Iniciá una carga desde Explorar y detenela acá. Al finalizar se calculan la energía y el costo.</p>
+    <div id="sessions-content"></div>
+  </section>
+
+  <!-- ============ ADMIN ============ -->
+  <section class="view" id="view-admin">
+    <h1 class="view-head">Administración</h1>
+    <p class="view-sub">Estado de la red y estadísticas de uso.</p>
+    <div id="admin-content"></div>
+  </section>
+</main>
+
+<!-- ============ LOGIN MODAL ============ -->
+<div class="overlay" id="authModal">
+  <div class="modal">
+    <h3 id="authTitle">Iniciar sesión</h3>
+    <p class="hint" id="authHint">Accedé para iniciar cargas y ver el panel.</p>
+    <div class="demo-note">Cuenta de prueba (admin): <b>admin@cargadores.com</b> / <b>Admin123!</b></div>
+    <div class="err" id="authErr"></div>
+    <div class="field" id="nameField" style="display:none">
+      <label>Nombre</label><input id="a-name" placeholder="Tu nombre" />
+    </div>
+    <div class="field"><label>Email</label><input id="a-email" type="email" value="admin@cargadores.com" /></div>
+    <div class="field"><label>Contraseña</label><input id="a-pass" type="password" value="Admin123!" /></div>
+    <div class="foot">
+      <button class="btn" onclick="closeAuth()">Cancelar</button>
+      <button class="btn primary" id="authSubmit" onclick="submitAuth()">Entrar</button>
+    </div>
+    <div class="switch-auth" id="switchAuth">
+      ¿No tenés cuenta? <a onclick="setAuthMode('register')">Registrate</a>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+// ============================================================
+//  Estado global
+// ============================================================
+const state = {
+  token: localStorage.getItem('ev_token') || null,
+  user: JSON.parse(localStorage.getItem('ev_user') || 'null'),
+  authMode: 'login',
+  explore: { page: 1, pageSize: 12, total: 0 },
+};
+
+const STATION_STATUS = [
+  { label: 'Disponible', cls: 'ok' },
+  { label: 'En uso', cls: 'warn' },
+  { label: 'Fuera de servicio', cls: 'bad' },
+];
+const SESSION_STATUS = ['Activa', 'Completada'];
+
+// ============================================================
+//  Helper de API (fetch con token + JSON)
+// ============================================================
+async function api(path, { method = 'GET', body = null, auth = false } = {}) {
+  const headers = {};
+  if (body) headers['Content-Type'] = 'application/json';
+  if (auth && state.token) headers['Authorization'] = 'Bearer ' + state.token;
+
+  const res = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : null });
+
+  if (res.status === 401) { logout(); throw new Error('Tu sesión expiró. Volvé a entrar.'); }
+  if (res.status === 403) throw new Error('No tenés permiso para esto (se requiere rol Admin).');
+
+  let data = null;
+  const text = await res.text();
+  if (text) { try { data = JSON.parse(text); } catch { data = text; } }
+
+  if (!res.ok) {
+    const msg = (data && (data.error || data.title)) || ('Error ' + res.status);
+    throw new Error(msg);
+  }
+  return data;
+}
+
+// ============================================================
+//  Toasts
+// ============================================================
+function toast(msg, type = '') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3200);
+}
+
+// ============================================================
+//  Utilidades de formato
+// ============================================================
+const money = n => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function fmtDate(s) {
+  if (!s) return '—';
+  const d = new Date(s);
+  return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+function emptyState(msg, action = '') { return `<div class="empty"><p>${msg}</p>${action}</div>`; }
+
+// ============================================================
+//  Auth UI
+// ============================================================
+function renderAuthArea() {
+  const el = document.getElementById('authArea');
+  if (state.user) {
+    el.innerHTML = `
+      <div class="who"><b>${esc(state.user.displayName)}</b><span>${esc(state.user.email)}</span></div>
+      <span class="role-chip">${esc(state.user.role)}</span>
+      <button class="btn sm" onclick="logout()">Salir</button>`;
+    document.getElementById('adminTab').classList.toggle('hidden', state.user.role !== 'Admin');
+  } else {
+    el.innerHTML = `<button class="btn" onclick="openAuth()">Iniciar sesión</button>`;
+    document.getElementById('adminTab').classList.add('hidden');
+  }
+}
+
+function openAuth() { setAuthMode('login'); document.getElementById('authErr').style.display = 'none'; document.getElementById('authModal').classList.add('show'); }
+function closeAuth() { document.getElementById('authModal').classList.remove('show'); }
+function setAuthMode(mode) {
+  state.authMode = mode;
+  const isReg = mode === 'register';
+  document.getElementById('authTitle').textContent = isReg ? 'Crear cuenta' : 'Iniciar sesión';
+  document.getElementById('authHint').textContent = isReg ? 'Registrate como conductor para cargar.' : 'Accedé para iniciar cargas y ver el panel.';
+  document.getElementById('nameField').style.display = isReg ? 'flex' : 'none';
+  document.getElementById('authSubmit').textContent = isReg ? 'Registrarme' : 'Entrar';
+  document.getElementById('switchAuth').innerHTML = isReg
+    ? '¿Ya tenés cuenta? <a onclick="setAuthMode(\'login\')">Entrá</a>'
+    : '¿No tenés cuenta? <a onclick="setAuthMode(\'register\')">Registrate</a>';
+}
+
+async function submitAuth() {
+  const email = document.getElementById('a-email').value.trim();
+  const password = document.getElementById('a-pass').value;
+  const errEl = document.getElementById('authErr');
+  errEl.style.display = 'none';
+  try {
+    let data;
+    if (state.authMode === 'register') {
+      const displayName = document.getElementById('a-name').value.trim() || 'Conductor';
+      data = await api('/api/auth/register', { method: 'POST', body: { email, password, displayName } });
+    } else {
+      data = await api('/api/auth/login', { method: 'POST', body: { email, password } });
+    }
+    state.token = data.token;
+    state.user = { email: data.email, displayName: data.displayName, role: data.role };
+    localStorage.setItem('ev_token', state.token);
+    localStorage.setItem('ev_user', JSON.stringify(state.user));
+    renderAuthArea();
+    closeAuth();
+    toast('Sesión iniciada como ' + data.displayName, 'ok');
+    if (document.querySelector('.view.active').id === 'view-sessions') loadSessions();
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function logout() {
+  state.token = null; state.user = null;
+  localStorage.removeItem('ev_token'); localStorage.removeItem('ev_user');
+  renderAuthArea();
+  const active = document.querySelector('.view.active').id;
+  if (active === 'view-sessions') loadSessions();
+  if (active === 'view-admin') switchView('explore');
+}
+
+// ============================================================
+//  Tabs
+// ============================================================
+function switchView(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  if (name === 'sessions') loadSessions();
+  if (name === 'admin') loadAdmin();
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
+
+// ============================================================
+//  Tarjeta de estación (reutilizable)
+// ============================================================
+function stationCard(s) {
+  const st = STATION_STATUS[s.status] || STATION_STATUS[0];
+  const connectors = (s.connectorTypes || []).map(c => `<span class="chip">${esc(c)}</span>`).join('');
+  const distance = (s.distanceKm != null) ? `<span class="dist">${s.distanceKm} km</span>` : '';
+  const canCharge = st.cls === 'ok';
+  return `
+    <div class="station">
+      <div class="row1">
+        <div>
+          <div class="code">${esc(s.stationId)}${distance}</div>
+          <div class="addr">${esc(s.address)}</div>
+        </div>
+        <span class="badge ${st.cls}">${st.label}</span>
+      </div>
+      <div class="chips">
+        <span class="chip">${esc(s.chargerType)}</span>
+        <span class="chip">${s.capacityKw} kW</span>
+        <span class="chip">${esc(s.operator)}</span>
+        ${s.renewableEnergy ? '<span class="chip renewable">Renovable</span>' : ''}
+      </div>
+      <div class="chips">${connectors}</div>
+      <div class="meta">
+        <span class="price">${money(s.costPerKwh)} <small>/ kWh</small></span>
+        <span>Rating ${Number(s.rating).toFixed(1)}</span>
+        <span>${s.parkingSpots} lugares</span>
+      </div>
+      <div class="actions">
+        <button class="btn primary sm" ${canCharge ? '' : 'disabled'} onclick="startCharge('${s.id}','${esc(s.stationId)}')">Iniciar carga</button>
+        <button class="btn sm" onclick="nearbyFrom(${s.latitude},${s.longitude})">Ver cercanas</button>
+      </div>
+    </div>`;
+}
+
+// ============================================================
+//  Explorar
+// ============================================================
+async function doSearch(page = 1) {
+  state.explore.page = page;
+  const p = new URLSearchParams();
+  const ct = document.getElementById('f-chargerType').value; if (ct) p.set('chargerType', ct);
+  const cn = document.getElementById('f-connectorType').value; if (cn) p.set('connectorType', cn);
+  const op = document.getElementById('f-operator').value.trim(); if (op) p.set('operator', op);
+  const mc = document.getElementById('f-minCap').value; if (mc) p.set('minCapacityKw', mc);
+  const xc = document.getElementById('f-maxCost').value; if (xc) p.set('maxCostPerKwh', xc);
+  const stt = document.getElementById('f-status').value; if (stt) p.set('status', stt);
+  if (document.getElementById('f-renew').checked) p.set('renewableOnly', 'true');
+  p.set('page', page); p.set('pageSize', state.explore.pageSize);
+
+  const box = document.getElementById('explore-results');
+  box.innerHTML = '<div class="spinner"></div>';
+  document.getElementById('explore-pager').innerHTML = '';
+  try {
+    const data = await api('/api/stations?' + p.toString());
+    state.explore.total = data.total;
+    if (!data.items.length) {
+      box.innerHTML = emptyState('No hay estaciones con esos filtros.');
+      return;
+    }
+    box.innerHTML = '<div class="grid">' + data.items.map(stationCard).join('') + '</div>';
+    renderPager(data.total, page);
+  } catch (e) {
+    box.innerHTML = emptyState(esc(e.message));
+  }
+}
+
+function renderPager(total, page) {
+  const pages = Math.ceil(total / state.explore.pageSize);
+  document.getElementById('explore-pager').innerHTML = `
+    <div class="pager">
+      <button class="btn sm" ${page <= 1 ? 'disabled' : ''} onclick="doSearch(${page - 1})">Anterior</button>
+      <span class="info">Página ${page} de ${pages} · ${total.toLocaleString('es-AR')} estaciones</span>
+      <button class="btn sm" ${page >= pages ? 'disabled' : ''} onclick="doSearch(${page + 1})">Siguiente</button>
+    </div>`;
+}
+
+// ============================================================
+//  Cercanos (geo)
+// ============================================================
+function nearbyFrom(lat, lng) {
+  document.getElementById('n-lat').value = lat;
+  document.getElementById('n-lng').value = lng;
+  switchView('nearby');
+  doNearby();
+}
+function useMyLocation() {
+  if (!navigator.geolocation) return toast('Tu navegador no soporta geolocalización', 'err');
+  navigator.geolocation.getCurrentPosition(
+    pos => { document.getElementById('n-lat').value = pos.coords.latitude.toFixed(6); document.getElementById('n-lng').value = pos.coords.longitude.toFixed(6); doNearby(); },
+    () => toast('No se pudo obtener tu ubicación', 'err')
+  );
+}
+async function doNearby() {
+  const lat = document.getElementById('n-lat').value, lng = document.getElementById('n-lng').value;
+  const maxKm = document.getElementById('n-maxKm').value || 500, limit = document.getElementById('n-limit').value || 24;
+  const box = document.getElementById('nearby-results');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const items = await api(`/api/stations/nearby?lat=${lat}&lng=${lng}&maxKm=${maxKm}&limit=${limit}`);
+    if (!items.length) { box.innerHTML = emptyState('No hay estaciones en ese radio. Probá aumentarlo.'); return; }
+    box.innerHTML = '<div class="grid">' + items.map(stationCard).join('') + '</div>';
+  } catch (e) {
+    box.innerHTML = emptyState(esc(e.message));
+  }
+}
+
+// ============================================================
+//  Sesiones de carga
+// ============================================================
+async function startCharge(stationId, code) {
+  if (!state.user) { toast('Iniciá sesión para cargar', 'err'); openAuth(); return; }
+  try {
+    await api('/api/sessions/start', { method: 'POST', auth: true, body: { stationId } });
+    toast('Carga iniciada en ' + code, 'ok');
+    const active = document.querySelector('.view.active').id;
+    if (active === 'view-explore') doSearch(state.explore.page);
+    else if (active === 'view-nearby') doNearby();
+  } catch (e) { toast(e.message, 'err'); }
+}
+
+async function stopCharge(id, kwhInputId) {
+  const val = document.getElementById(kwhInputId).value;
+  const body = val ? { energyKwh: Number(val) } : {};
+  try {
+    const s = await api(`/api/sessions/${id}/stop`, { method: 'POST', auth: true, body });
+    toast(`Carga finalizada: ${s.energyKwh} kWh · ${money(s.cost)}`, 'ok');
+    loadSessions();
+  } catch (e) { toast(e.message, 'err'); }
+}
+
+async function loadSessions() {
+  const box = document.getElementById('sessions-content');
+  if (!state.user) {
+    box.innerHTML = emptyState('Iniciá sesión para ver tus cargas.', '<button class="btn primary" onclick="openAuth()">Iniciar sesión</button>');
+    return;
+  }
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const sessions = await api('/api/sessions/history', { auth: true });
+    const active = sessions.filter(s => s.status === 0);
+    const done = sessions.filter(s => s.status === 1);
+    let html = '';
+
+    if (active.length) {
+      html += '<div class="section-title">Cargas en curso</div>';
+      html += active.map(s => `
+        <div class="panel active-session">
+          <div class="row">
+            <div>
+              <div class="title"><span class="dot"></span>${esc(s.stationCode)} · ${esc(s.stationAddress)}</div>
+              <div class="when">Iniciada: ${fmtDate(s.startTime)}</div>
+            </div>
+            <div class="controls">
+              <input id="kwh-${s.id}" type="number" step="0.1" placeholder="kWh (opc.)" />
+              <button class="btn danger" onclick="stopCharge('${s.id}','kwh-${s.id}')">Detener carga</button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    html += '<div class="section-title">Historial</div>';
+    if (!done.length) {
+      html += emptyState('Todavía no completaste ninguna carga.');
+    } else {
+      html += `<table class="data"><thead><tr>
+        <th>Estación</th><th>Inicio</th><th>Fin</th><th>Energía</th><th>Costo</th><th>Estado</th>
+        </tr></thead><tbody>` +
+        done.map(s => `<tr>
+          <td><b>${esc(s.stationCode)}</b><br><span class="sub">${esc(s.stationAddress)}</span></td>
+          <td>${fmtDate(s.startTime)}</td><td>${fmtDate(s.endTime)}</td>
+          <td>${s.energyKwh} kWh</td><td><b>${money(s.cost)}</b></td>
+          <td><span class="badge ok">${SESSION_STATUS[s.status]}</span></td>
+        </tr>`).join('') + '</tbody></table>';
+    }
+    box.innerHTML = html;
+  } catch (e) {
+    box.innerHTML = emptyState(esc(e.message));
+  }
+}
+
+// ============================================================
+//  Admin
+// ============================================================
+async function loadAdmin() {
+  const box = document.getElementById('admin-content');
+  if (!state.user || state.user.role !== 'Admin') {
+    box.innerHTML = emptyState('Solo administradores. Entrá con la cuenta admin.');
+    return;
+  }
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const [dash, perDay, top] = await Promise.all([
+      api('/api/admin/dashboard', { auth: true }),
+      api('/api/admin/stats/sessions-per-day?days=7', { auth: true }),
+      api('/api/admin/stats/top-stations?limit=5', { auth: true }),
+    ]);
+
+    let html = '<div class="stats">' + [
+      ['Total estaciones', dash.totalStations.toLocaleString('es-AR')],
+      ['Disponibles', dash.available.toLocaleString('es-AR')],
+      ['En uso', dash.inUse],
+      ['Fuera de servicio', dash.outOfService],
+      ['Sesiones activas', dash.activeSessions],
+      ['Energía total', dash.totalEnergyKwh + ' kWh'],
+      ['Recaudación', money(dash.totalRevenue)],
+    ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('') + '</div>';
+
+    html += '<div class="section-title">Sesiones por día (últimos 7)</div>';
+    if (!perDay.length) {
+      html += '<div class="panel"><p class="note">Sin sesiones completadas aún. Iniciá y detené una carga para ver datos acá.</p></div>';
+    } else {
+      const max = Math.max(...perDay.map(d => d.count));
+      html += '<div class="panel"><div class="bars">' + perDay.map(d => {
+        const day = new Date(d.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+        return `<div class="bar-row"><span>${day}</span><div class="bar-track"><div class="bar-fill" style="width:${(d.count / max * 100)}%"></div></div><b>${d.count}</b></div>`;
+      }).join('') + '</div></div>';
+    }
+
+    html += '<div class="section-title">Cargadores más usados</div>';
+    if (!top.length) {
+      html += '<div class="panel"><p class="note">Todavía no hay ranking.</p></div>';
+    } else {
+      html += `<table class="data"><thead><tr><th>#</th><th>Estación</th><th>Sesiones</th><th>Energía</th><th>Recaudación</th></tr></thead><tbody>` +
+        top.map((t, i) => `<tr><td>${i + 1}</td><td><b>${esc(t.stationCode)}</b><br><span class="sub">${esc(t.address)}</span></td>
+        <td>${t.sessionCount}</td><td>${t.energyKwh} kWh</td><td><b>${money(t.revenue)}</b></td></tr>`).join('') + '</tbody></table>';
+    }
+    box.innerHTML = html;
+  } catch (e) {
+    box.innerHTML = emptyState(esc(e.message));
+  }
+}
+
+// ============================================================
+//  Init
+// ============================================================
+document.getElementById('a-pass').addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(); });
+renderAuthArea();
+doSearch(1);
+</script>
+</body>
+</html>
