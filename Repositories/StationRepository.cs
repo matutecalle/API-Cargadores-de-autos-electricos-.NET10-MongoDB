@@ -1,6 +1,7 @@
 using APICargadores.Config;
 using APICargadores.DTOs;
 using APICargadores.Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
 
@@ -60,8 +61,12 @@ public class StationRepository : IStationRepository
         return await _stations.Find(filter).Limit(limit).ToListAsync();
     }
 
+    // Un id que no es un ObjectId válido no puede existir: se trata como "no encontrado"
+    // en lugar de dejar que el driver lance una excepción de formato (500).
     public async Task<Station?> GetByIdAsync(string id) =>
-        await _stations.Find(s => s.Id == id).FirstOrDefaultAsync();
+        ObjectId.TryParse(id, out _)
+            ? await _stations.Find(s => s.Id == id).FirstOrDefaultAsync()
+            : null;
 
     public async Task<Station?> GetByStationCodeAsync(string stationCode) =>
         await _stations.Find(s => s.StationId == stationCode).FirstOrDefaultAsync();
@@ -74,12 +79,14 @@ public class StationRepository : IStationRepository
 
     public async Task<bool> ReplaceAsync(string id, Station station)
     {
+        if (!ObjectId.TryParse(id, out _)) return false;
         var result = await _stations.ReplaceOneAsync(s => s.Id == id, station);
         return result.ModifiedCount > 0;
     }
 
     public async Task<bool> DeleteAsync(string id)
     {
+        if (!ObjectId.TryParse(id, out _)) return false;
         var result = await _stations.DeleteOneAsync(s => s.Id == id);
         return result.DeletedCount > 0;
     }

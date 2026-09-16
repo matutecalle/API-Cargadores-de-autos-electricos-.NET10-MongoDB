@@ -4,302 +4,655 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Cargadores EV</title>
+<link rel="icon" type="image/png" href="logo.png" />
+<link rel="apple-touch-icon" href="logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg: #f5f6f8;
-    --card: #ffffff;
-    --ink: #1f2937;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-    --border-strong: #d1d5db;
-    --accent: #1d4ed8;
-    --accent-dark: #1e40af;
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #f9fafb;
+    --ink: #0f172a;
+    --ink-2: #334155;
+    --muted: #64748b;
+    --subtle: #94a3b8;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
     --accent-soft: #eff6ff;
-    --ok: #15803d; --ok-bg: #f0fdf4;
-    --warn: #b45309; --warn-bg: #fffbeb;
-    --bad: #b91c1c; --bad-bg: #fef2f2;
-    --radius: 8px;
+    --accent-ring: rgba(37, 99, 235, .18);
+
+    --ok: #047857;   --ok-bg: #ecfdf5;   --ok-dot: #10b981;
+    --warn: #b45309; --warn-bg: #fffbeb; --warn-dot: #f59e0b;
+    --bad: #b91c1c;  --bad-bg: #fef2f2;  --bad-dot: #ef4444;
+
+    --side-bg: #0f172a;
+    --side-ink: #cbd5e1;
+    --side-muted: #64748b;
+    --side-hover: #1e293b;
+
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, .08);
+    --shadow-lg: 0 20px 48px rgba(15, 23, 42, .18);
+    --sidebar-w: 248px;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-size: 14px; -webkit-font-smoothing: antialiased;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased;
   }
-  a { color: var(--accent); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
   button { font-family: inherit; cursor: pointer; }
-  code { font-size: 13px; background: #f3f4f6; padding: 1px 5px; border-radius: 4px; }
+  code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12.5px; background: #f1f5f9; padding: 1px 6px; border-radius: 4px; color: var(--ink-2); }
+  .num { font-variant-numeric: tabular-nums; }
+  .i { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-  /* ---------- Top bar ---------- */
-  header.topbar { position: sticky; top: 0; z-index: 40; background: var(--card); border-bottom: 1px solid var(--border); }
-  .topbar-inner { max-width: 1120px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 16px; }
-  .brand { font-weight: 700; font-size: 16px; line-height: 1.2; }
-  .brand small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
-  .spacer { flex: 1; }
-  .auth-area { display: flex; align-items: center; gap: 12px; }
-  .auth-area .who { text-align: right; line-height: 1.25; }
-  .auth-area .who b { display: block; }
-  .auth-area .who span { font-size: 12px; color: var(--muted); }
-  .role-chip { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: #f3f4f6; color: var(--muted); border: 1px solid var(--border); }
+  /* ---------- App shell ---------- */
+  .app { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); min-height: 100vh; }
+
+  .sidebar {
+    background: var(--side-bg); color: var(--side-ink);
+    position: sticky; top: 0; height: 100vh;
+    display: flex; flex-direction: column; padding: 20px 14px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 22px; }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 8px; background: var(--accent);
+    display: grid; place-items: center; color: #fff;
+  }
+  .brand-mark .i { width: 18px; height: 18px; }
+  .brand-name { font-weight: 600; font-size: 15px; color: #fff; line-height: 1.2; }
+  .brand-name small { display: block; font-weight: 400; font-size: 12px; color: var(--side-muted); }
+
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav-label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--side-muted); padding: 16px 10px 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    border: none; background: none; color: var(--side-ink);
+    padding: 9px 10px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; text-align: left;
+  }
+  .nav-item .i { color: var(--side-muted); }
+  .nav-item:hover { background: var(--side-hover); color: #fff; }
+  .nav-item.active { background: var(--side-hover); color: #fff; }
+  .nav-item.active .i { color: #93c5fd; }
+  .nav-group.hidden { display: none; }
+
+  .side-foot { margin-top: auto; border-top: 1px solid #1e293b; padding-top: 14px; }
+  .user-card { display: flex; align-items: center; gap: 10px; padding: 6px 8px; }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%; background: #334155; color: #fff;
+    display: grid; place-items: center; font-weight: 600; font-size: 13px; flex: none;
+  }
+  .user-meta { min-width: 0; flex: 1; line-height: 1.3; }
+  .user-meta b { display: block; color: #fff; font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-meta span { display: block; color: var(--side-muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .icon-btn {
+    border: none; background: none; color: var(--side-muted); width: 32px; height: 32px;
+    border-radius: var(--radius-sm); display: grid; place-items: center; flex: none;
+  }
+  .icon-btn:hover { background: var(--side-hover); color: #fff; }
+  .side-login {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm);
+    padding: 9px 12px; font-size: 14px; font-weight: 500;
+  }
+  .side-login:hover { background: var(--accent-hover); }
+  .role-tag { display: inline-block; font-size: 10.5px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: #93c5fd; }
+
+  /* ---------- Content ---------- */
+  .content { min-width: 0; }
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 36px 72px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .page-head h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+  .page-head p { margin: 4px 0 0; color: var(--muted); max-width: 640px; }
+  .page-actions { display: flex; gap: 8px; }
 
   /* ---------- Buttons ---------- */
   .btn {
-    border: 1px solid var(--border-strong); background: var(--card); color: var(--ink);
-    padding: 8px 14px; border-radius: 6px; font-size: 14px; font-weight: 500; white-space: nowrap;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink-2);
+    padding: 0 14px; height: 36px; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500; white-space: nowrap; box-shadow: var(--shadow-sm);
+    transition: background .12s, border-color .12s, color .12s;
   }
-  .btn:hover { background: #f9fafb; }
+  .btn:hover { background: var(--surface-2); color: var(--ink); }
+  .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .btn.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
-  .btn.sm { padding: 5px 10px; font-size: 13px; }
-  .btn.danger { background: var(--card); border-color: #fca5a5; color: var(--bad); }
+  .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn.ghost { border-color: transparent; background: none; box-shadow: none; color: var(--muted); }
+  .btn.ghost:hover { background: #f1f5f9; color: var(--ink); }
+  .btn.danger { color: var(--bad); border-color: #fecaca; }
   .btn.danger:hover { background: var(--bad-bg); }
-  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.sm { height: 32px; padding: 0 11px; font-size: 13px; }
+  .btn.icon { width: 32px; padding: 0; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.loading { pointer-events: none; opacity: .7; }
 
-  /* ---------- Tabs ---------- */
-  nav.tabs { background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 57px; z-index: 30; }
-  .tabs-inner { max-width: 1120px; margin: 0 auto; padding: 0 20px; display: flex; gap: 4px; }
-  .tab {
-    border: none; background: none; padding: 12px 14px; font-size: 14px; font-weight: 500;
-    color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  /* ---------- Panels & forms ---------- */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .card-head h2 { margin: 0; font-size: 14px; font-weight: 600; }
+  .card-head span { color: var(--muted); font-size: 13px; }
+  .card-body { padding: 18px; }
+
+  .filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 16px; padding: 18px; }
+  .filters-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-top: 1px solid var(--border); background: var(--surface-2); border-radius: 0 0 var(--radius) var(--radius); flex-wrap: wrap; }
+  .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .field label { font-size: 12.5px; font-weight: 500; color: var(--ink-2); }
+  .input, .field input:not([type=checkbox]), .field select {
+    height: 36px; padding: 0 11px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    font: inherit; font-size: 14px; background: var(--surface); color: var(--ink); width: 100%;
+    transition: border-color .12s, box-shadow .12s;
   }
-  .tab:hover { color: var(--ink); }
-  .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
-  .tab.hidden { display: none; }
+  .field select { appearance: none; padding-right: 32px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; }
+  .input:focus, .field input:focus, .field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+  .field input::placeholder { color: var(--subtle); }
+  .check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); cursor: pointer; user-select: none; }
+  .check input { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
+  .filter-count { font-size: 13px; color: var(--muted); }
 
-  /* ---------- Layout ---------- */
-  main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 60px; }
-  .view { display: none; }
-  .view.active { display: block; }
-  .view-head { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
-  .view-sub { margin: 0 0 20px; color: var(--muted); }
+  /* ---------- Results bar ---------- */
+  .results-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 24px 0 12px; flex-wrap: wrap; }
+  .results-bar .count { font-weight: 600; }
+  .results-bar .range { color: var(--muted); font-size: 13px; }
 
-  /* ---------- Filters ---------- */
-  .panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-  .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field label { font-size: 12px; font-weight: 500; color: var(--muted); }
-  .field input, .field select {
-    padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 14px; background: var(--card); color: var(--ink);
+  /* ---------- Station cards ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .station {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow-sm); display: flex; flex-direction: column; transition: box-shadow .15s, border-color .15s;
   }
-  .field input:focus, .field select:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
-  .checkbox-row { display: flex; align-items: center; gap: 8px; height: 36px; }
-  .checkbox-row input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .station:hover { box-shadow: var(--shadow-md); border-color: var(--border-strong); }
+  .station-top { padding: 16px 16px 0; }
+  .station-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .station-code { font-weight: 600; font-size: 15px; letter-spacing: -.005em; }
+  .station-op { font-size: 12.5px; color: var(--muted); }
+  .station-addr { display: flex; gap: 6px; color: var(--muted); font-size: 13px; margin-top: 8px; line-height: 1.4; }
+  .station-addr .i { width: 14px; height: 14px; margin-top: 2px; color: var(--subtle); }
+  .station-addr span { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .distance { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 12px; font-weight: 500; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 999px; }
 
-  /* ---------- Cards grid ---------- */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; margin-top: 20px; }
-  .station { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
-  .station .row1 { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-  .station .code { font-weight: 600; font-size: 15px; }
-  .station .addr { color: var(--muted); font-size: 13px; line-height: 1.35; }
-  .badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
-  .badge.ok { background: var(--ok-bg); color: var(--ok); }
-  .badge.warn { background: var(--warn-bg); color: var(--warn); }
-  .badge.bad { background: var(--bad-bg); color: var(--bad); }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { font-size: 12px; background: #f9fafb; border: 1px solid var(--border); color: #4b5563; padding: 2px 8px; border-radius: 4px; }
-  .chip.renewable { background: var(--ok-bg); color: var(--ok); border-color: #bbf7d0; }
-  .station .meta { display: flex; align-items: baseline; gap: 16px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
-  .station .price { font-size: 17px; font-weight: 600; color: var(--ink); }
-  .station .price small { font-size: 12px; color: var(--muted); font-weight: 400; }
-  .station .actions { display: flex; gap: 8px; margin-top: 2px; }
-  .dist { font-size: 12px; font-weight: 500; color: var(--accent); margin-left: 6px; }
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); margin: 14px 16px 0; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .metric { padding: 9px 12px; }
+  .metric + .metric { border-left: 1px solid var(--border); }
+  .metric .k { font-size: 11.5px; color: var(--muted); }
+  .metric .v { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .metric .v small { font-size: 12px; font-weight: 400; color: var(--muted); }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px 14px; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; color: var(--ink-2); background: #f1f5f9; padding: 2px 8px; border-radius: 4px; }
+  .tag.outline { background: none; border: 1px solid var(--border); color: var(--muted); }
+  .tag.green { background: var(--ok-bg); color: var(--ok); }
+  .tag .i { width: 12px; height: 12px; }
+
+  .station-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding: 12px 16px; border-top: 1px solid var(--border); }
+  .station-foot .aux { font-size: 12.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 5px; }
+  .station-foot .aux .i { width: 14px; height: 14px; }
+  .station-foot .btns { display: flex; gap: 6px; }
+
+  .status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 2px 9px 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status.ok { background: var(--ok-bg); color: var(--ok); }
+  .status.ok::before { background: var(--ok-dot); }
+  .status.warn { background: var(--warn-bg); color: var(--warn); }
+  .status.warn::before { background: var(--warn-dot); }
+  .status.bad { background: var(--bad-bg); color: var(--bad); }
+  .status.bad::before { background: var(--bad-dot); }
+  .status.info { background: var(--accent-soft); color: var(--accent); }
+
+  /* ---------- Skeleton ---------- */
+  .skeleton { position: relative; overflow: hidden; background: #eef1f5; border-radius: 4px; }
+  .skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); animation: shimmer 1.2s infinite; }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  .sk-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; min-height: 230px; }
 
   /* ---------- Pagination ---------- */
-  .pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 24px; }
-  .pager .info { color: var(--muted); }
+  .pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+  .pager .info { color: var(--muted); font-size: 13px; }
+  .pager .ctrls { display: flex; align-items: center; gap: 4px; }
+  .page-num { min-width: 32px; height: 32px; padding: 0 8px; border: 1px solid transparent; background: none; border-radius: var(--radius-sm); font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .page-num:hover { background: #f1f5f9; }
+  .page-num.current { border-color: var(--border-strong); background: var(--surface); font-weight: 600; color: var(--ink); box-shadow: var(--shadow-sm); }
+  .page-gap { color: var(--subtle); padding: 0 4px; }
 
   /* ---------- Tables ---------- */
-  table.data { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  table.data th, table.data td { text-align: left; padding: 10px 14px; font-size: 13.5px; border-bottom: 1px solid var(--border); }
-  table.data th { background: #f9fafb; color: var(--muted); font-size: 12px; font-weight: 500; }
-  table.data tr:last-child td { border-bottom: none; }
-  .sub { color: var(--muted); font-size: 12px; }
+  .table-wrap { overflow-x: auto; }
+  table.data { width: 100%; border-collapse: collapse; }
+  table.data th, table.data td { text-align: left; padding: 11px 18px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table.data th { background: var(--surface-2); color: var(--muted); font-size: 12px; font-weight: 500; }
+  table.data td { font-size: 13.5px; color: var(--ink-2); }
+  table.data tbody tr:hover td { background: #fafbfc; }
+  table.data tbody tr:last-child td { border-bottom: none; }
+  table.data .r { text-align: right; }
+  .cell-main { font-weight: 500; color: var(--ink); }
+  .cell-sub { color: var(--muted); font-size: 12px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
+  .share { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+  .share-track { width: 80px; height: 6px; background: #eef1f5; border-radius: 999px; overflow: hidden; }
+  .share-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+
+  /* ---------- KPIs ---------- */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow-sm); }
+  .kpi .k { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .kpi .v { font-size: 26px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .kpi .s { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+  .dist-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: #eef1f5; }
+  .dist-bar div { height: 100%; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+  .legend-item i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .legend-item b { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
+
+  .bars { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: grid; grid-template-columns: 64px 1fr 110px; align-items: center; gap: 12px; font-size: 13px; }
+  .bar-row .d { color: var(--muted); }
+  .bar-track { background: #eef1f5; border-radius: 4px; height: 10px; overflow: hidden; }
+  .bar-fill { background: var(--accent); height: 100%; border-radius: 4px; min-width: 2px; }
+  .bar-row .n { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  .bar-row .n b { color: var(--ink); }
 
   /* ---------- Sessions ---------- */
-  .active-session { border-left: 3px solid var(--accent); margin-bottom: 12px; }
-  .active-session .row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-  .active-session .title { font-weight: 600; }
-  .active-session .when { color: var(--muted); font-size: 13px; margin-top: 4px; }
-  .active-session .controls { display: flex; gap: 8px; align-items: center; }
-  .active-session input { width: 110px; padding: 7px 8px; border: 1px solid var(--border-strong); border-radius: 6px; }
-  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 8px; vertical-align: middle; }
+  .section-title { font-size: 15px; font-weight: 600; margin: 28px 0 12px; }
+  .live { display: flex; flex-direction: column; gap: 12px; }
+  .live-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; flex-wrap: wrap; }
+  .live-info { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .live-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; }
+  .live-icon .i { width: 20px; height: 20px; }
+  .live-title { font-weight: 600; }
+  .live-sub { color: var(--muted); font-size: 13px; }
+  .live-timer { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 20px; letter-spacing: -.01em; }
+  .live-ctrls { display: flex; align-items: center; gap: 8px; }
+  .live-ctrls .input { width: 130px; height: 32px; font-size: 13px; }
+  .pulse { position: relative; }
+  .pulse::after { content: ""; position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: var(--ok-dot); border: 2px solid var(--surface); }
 
-  /* ---------- Admin ---------- */
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
-  .stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
-  .stat .k { font-size: 12px; color: var(--muted); }
-  .stat .v { font-size: 24px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
-  .bars { display: flex; flex-direction: column; gap: 8px; }
-  .bar-row { display: grid; grid-template-columns: 90px 1fr 50px; align-items: center; gap: 10px; font-size: 13px; }
-  .bar-track { background: #f3f4f6; border-radius: 4px; height: 18px; overflow: hidden; }
-  .bar-fill { background: var(--accent); height: 100%; border-radius: 4px; min-width: 2px; }
-  .section-title { font-size: 15px; font-weight: 600; margin: 24px 0 12px; }
-  .note { color: var(--muted); margin: 0; }
-
-  /* ---------- States ---------- */
-  .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
-  .empty p { margin: 0 0 14px; }
-  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 40px auto; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  /* ---------- Empty / error ---------- */
+  .empty { text-align: center; padding: 56px 24px; color: var(--muted); }
+  .empty .empty-icon { width: 44px; height: 44px; margin: 0 auto 14px; border-radius: 50%; background: #f1f5f9; display: grid; place-items: center; color: var(--subtle); }
+  .empty .empty-icon .i { width: 20px; height: 20px; }
+  .empty h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+  .empty p { margin: 4px auto 16px; max-width: 380px; }
+  .empty.error .empty-icon { background: var(--bad-bg); color: var(--bad); }
 
   /* ---------- Modal ---------- */
-  .overlay { position: fixed; inset: 0; background: rgba(17,24,39,.45); display: none; place-items: center; z-index: 60; padding: 20px; }
-  .overlay.show { display: grid; }
-  .modal { background: var(--card); border-radius: 10px; padding: 24px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,.15); }
-  .modal h3 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
-  .modal p.hint { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
-  .modal .field { margin-bottom: 14px; }
-  .modal .field input { padding: 10px; }
-  .modal .err { background: var(--bad-bg); color: var(--bad); padding: 9px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 14px; display: none; }
-  .modal .foot { display: flex; gap: 10px; margin-top: 6px; }
-  .modal .foot .btn { flex: 1; }
-  .switch-auth { text-align: center; margin-top: 14px; font-size: 13px; color: var(--muted); }
+  .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, .5); display: none; place-items: center; z-index: 60; padding: 16px; }
+  .overlay.show { display: grid; animation: fade .15s ease-out; }
+  .modal { background: var(--surface); border-radius: 12px; width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); animation: rise .18s ease-out; }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+  .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 22px 24px 0; }
+  .modal-head h3 { margin: 0; font-size: 18px; font-weight: 600; }
+  .modal-head p { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; }
+  .modal-close { border: none; background: none; color: var(--subtle); width: 30px; height: 30px; border-radius: var(--radius-sm); display: grid; place-items: center; margin: -4px -8px 0 0; }
+  .modal-close:hover { background: #f1f5f9; color: var(--ink); }
+  .modal-body { padding: 18px 24px 8px; display: flex; flex-direction: column; gap: 14px; }
+  .modal-foot { padding: 12px 24px 22px; display: flex; flex-direction: column; gap: 14px; }
+  .modal-foot .btn { width: 100%; height: 38px; }
+  .alert { display: none; gap: 8px; align-items: flex-start; background: var(--bad-bg); color: var(--bad); padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13px; }
+  .alert.show { display: flex; }
+  .alert .i { margin-top: 1px; }
+  .demo-note { background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-size: 12.5px; padding: 10px 12px; border-radius: var(--radius-sm); }
+  .demo-note b { color: var(--ink-2); font-weight: 500; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; }
+  .switch-auth { text-align: center; font-size: 13px; color: var(--muted); }
   .switch-auth a { cursor: pointer; font-weight: 500; }
-  .demo-note { background: #f9fafb; border: 1px solid var(--border); color: var(--muted); font-size: 12px; padding: 8px 10px; border-radius: 6px; margin-bottom: 16px; }
-  .demo-note b { color: var(--ink); font-weight: 600; }
+
+  .btn.ghost.danger { border-color: transparent; }
+  .btn.danger-solid { background: #dc2626; border-color: #dc2626; color: #fff; }
+  .btn.danger-solid:hover { background: #b91c1c; border-color: #b91c1c; }
+
+  /* ---------- Admin: gestión de estaciones ---------- */
+  .subtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: -8px 0 20px; }
+  .subtab { border: none; background: none; padding: 10px 12px; font-size: 14px; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .subtab:hover { color: var(--ink); }
+  .subtab.active { color: var(--ink); border-bottom-color: var(--accent); }
+  .toolbar { display: flex; align-items: flex-end; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .toolbar .field { width: 190px; }
+  .toolbar .grow { flex: 1; }
+  .card-foot { padding: 12px 18px; border-top: 1px solid var(--border); }
+  .card-foot .pager { margin-top: 0; }
+  .row-actions { display: flex; gap: 2px; justify-content: flex-end; }
+  table.data.compact th, table.data.compact td { padding: 10px 12px; }
+  table.data.compact th:first-child, table.data.compact td:first-child { padding-left: 18px; }
+  table.data.compact th:last-child, table.data.compact td:last-child { padding-right: 14px; }
+  table.data tr.flash td { animation: flash 2.4s ease-out; }
+  @keyframes flash { from { background: var(--accent-soft); } }
+
+  .modal.lg { max-width: 640px; }
+  .modal-body.scroll { max-height: calc(100vh - 230px); overflow-y: auto; }
+  .modal-foot.row { flex-direction: row; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .modal-foot.row .btn { width: auto; height: 36px; }
+  .modal-foot.plain { border-top: none; padding-top: 20px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  .field .hint { font-size: 12px; color: var(--muted); }
+  .field input:disabled, .field select:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
+  .field label.check { font-size: 14px; font-weight: 400; }
+  .check-group { display: flex; flex-wrap: wrap; gap: 8px 20px; padding-top: 2px; }
+  .req { color: var(--bad); }
 
   /* ---------- Toasts ---------- */
   #toasts { position: fixed; bottom: 20px; right: 20px; z-index: 80; display: flex; flex-direction: column; gap: 8px; }
   .toast {
-    background: var(--ink); color: #fff; padding: 11px 14px; border-radius: 6px; font-size: 14px;
-    box-shadow: 0 6px 20px rgba(0,0,0,.18); max-width: 340px; border-left: 3px solid transparent;
+    display: flex; align-items: flex-start; gap: 10px; background: var(--ink); color: #f8fafc;
+    padding: 12px 14px; border-radius: 8px; font-size: 13.5px; box-shadow: var(--shadow-lg);
+    max-width: 360px; animation: rise .18s ease-out; transition: opacity .25s;
   }
-  .toast.ok { border-left-color: #4ade80; }
-  .toast.err { border-left-color: #f87171; }
+  .toast .i { margin-top: 2px; }
+  .toast.ok .i { color: #34d399; }
+  .toast.err .i { color: #f87171; }
 
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1080px) {
+    .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 860px) {
+    .app { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { position: sticky; top: 0; z-index: 40; height: auto; padding: 10px 16px; flex-direction: row; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .brand { padding: 0; }
+    .brand-name small { display: none; }
+    .side-foot { margin: 0 0 0 auto; border: none; padding: 0; order: 2; }
+    .user-meta { display: none; }
+    .user-card { padding: 0; }
+    .side-login { padding: 7px 12px; }
+    .nav { order: 3; flex-direction: row; width: 100%; overflow-x: auto; gap: 4px; }
+    .nav-group { display: contents; }
+    .nav-group.hidden .nav-item { display: none; }
+    .nav-label { display: none; }
+    .nav-item { width: auto; white-space: nowrap; padding: 7px 10px; }
+    main { padding: 24px 16px 60px; }
+  }
   @media (max-width: 560px) {
-    .auth-area .who { display: none; }
+    .page-head p { max-width: 100%; }
+    .filters-foot .page-actions { width: 100%; justify-content: flex-end; }
+    .filter-count { display: none; }
+    .filters { grid-template-columns: 1fr; }
+    .grid { grid-template-columns: 1fr; }
+    .bar-row { grid-template-columns: 52px 1fr 90px; }
+    .live-ctrls { width: 100%; }
+    .live-ctrls .input { flex: 1; width: auto; }
+    .form-grid { grid-template-columns: 1fr; }
+    .toolbar .field { width: 100%; }
   }
 </style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">Cargadores EV<small>Red de estaciones de carga</small></div>
-    <div class="spacer"></div>
-    <div class="auth-area" id="authArea"></div>
-  </div>
-</header>
+<!-- Iconos SVG (trazo) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17v-6"/><path d="M13 17V7"/><path d="M18 17v-4"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></symbol>
+  <symbol id="i-login" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-crosshair" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M22 12h-4M6 12H2M12 6V2M12 22v-4"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5.1-6"/></symbol>
+  <symbol id="i-parking" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.7 5.7 12.6 12.6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></symbol>
+</svg>
 
-<nav class="tabs">
-  <div class="tabs-inner">
-    <button class="tab active" data-view="explore">Explorar</button>
-    <button class="tab" data-view="nearby">Cercanos</button>
-    <button class="tab" data-view="sessions">Mis sesiones</button>
-    <button class="tab hidden" data-view="admin" id="adminTab">Administración</button>
-  </div>
-</nav>
-
-<main>
-  <!-- ============ EXPLORE ============ -->
-  <section class="view active" id="view-explore">
-    <h1 class="view-head">Explorar cargadores</h1>
-    <p class="view-sub">Buscá entre las estaciones de la red filtrando por tipo, conector, potencia, costo y estado.</p>
-    <div class="panel">
-      <div class="filters">
-        <div class="field">
-          <label>Tipo de cargador</label>
-          <select id="f-chargerType">
-            <option value="">Todos</option>
-            <option>AC Level 1</option>
-            <option>AC Level 2</option>
-            <option>DC Fast Charger</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Conector</label>
-          <select id="f-connectorType">
-            <option value="">Todos</option>
-            <option>Type 2</option>
-            <option>CCS</option>
-            <option>CHAdeMO</option>
-            <option>Tesla</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Operador</label>
-          <input id="f-operator" placeholder="ej. EVgo" />
-        </div>
-        <div class="field">
-          <label>Potencia mín. (kW)</label>
-          <input id="f-minCap" type="number" min="0" placeholder="ej. 150" />
-        </div>
-        <div class="field">
-          <label>Costo máx. (USD/kWh)</label>
-          <input id="f-maxCost" type="number" min="0" step="0.01" placeholder="ej. 0.30" />
-        </div>
-        <div class="field">
-          <label>Estado</label>
-          <select id="f-status">
-            <option value="">Todos</option>
-            <option value="0">Disponible</option>
-            <option value="1">En uso</option>
-            <option value="2">Fuera de servicio</option>
-          </select>
-        </div>
-        <div class="field">
-          <div class="checkbox-row"><input type="checkbox" id="f-renew" /><label for="f-renew" style="color:var(--ink)">Solo energía renovable</label></div>
-        </div>
-        <div class="field">
-          <button class="btn primary" onclick="doSearch(1)">Buscar</button>
-        </div>
-      </div>
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><svg class="i"><use href="#i-bolt"/></svg></div>
+      <div class="brand-name">Cargadores EV<small>Red de estaciones de carga</small></div>
     </div>
-    <div id="explore-results"></div>
-    <div id="explore-pager"></div>
-  </section>
 
-  <!-- ============ NEARBY ============ -->
-  <section class="view" id="view-nearby">
-    <h1 class="view-head">Cargadores cercanos</h1>
-    <p class="view-sub">Estaciones ordenadas por distancia a una coordenada (consulta geoespacial con índice <code>2dsphere</code>).</p>
-    <div class="panel">
-      <div class="filters">
-        <div class="field"><label>Latitud</label><input id="n-lat" type="number" step="any" value="37.7749" /></div>
-        <div class="field"><label>Longitud</label><input id="n-lng" type="number" step="any" value="-122.4194" /></div>
-        <div class="field"><label>Radio máx. (km)</label><input id="n-maxKm" type="number" value="500" /></div>
-        <div class="field"><label>Máx. resultados</label><input id="n-limit" type="number" value="24" /></div>
-        <div class="field"><button class="btn" onclick="useMyLocation()">Usar mi ubicación</button></div>
-        <div class="field"><button class="btn primary" onclick="doNearby()">Buscar</button></div>
+    <nav class="nav">
+      <div class="nav-label">Red</div>
+      <button class="nav-item active" data-view="explore"><svg class="i"><use href="#i-search"/></svg>Explorar</button>
+      <button class="nav-item" data-view="nearby"><svg class="i"><use href="#i-pin"/></svg>Cercanos</button>
+      <div class="nav-label">Cuenta</div>
+      <button class="nav-item" data-view="sessions"><svg class="i"><use href="#i-activity"/></svg>Mis sesiones</button>
+      <div class="nav-group hidden" id="adminGroup">
+        <div class="nav-label">Operación</div>
+        <button class="nav-item" data-view="admin"><svg class="i"><use href="#i-chart"/></svg>Administración</button>
       </div>
-    </div>
-    <div id="nearby-results"></div>
-  </section>
+    </nav>
 
-  <!-- ============ SESSIONS ============ -->
-  <section class="view" id="view-sessions">
-    <h1 class="view-head">Mis sesiones de carga</h1>
-    <p class="view-sub">Iniciá una carga desde Explorar y detenela acá. Al finalizar se calculan la energía y el costo.</p>
-    <div id="sessions-content"></div>
-  </section>
+    <div class="side-foot" id="authArea"></div>
+  </aside>
 
-  <!-- ============ ADMIN ============ -->
-  <section class="view" id="view-admin">
-    <h1 class="view-head">Administración</h1>
-    <p class="view-sub">Estado de la red y estadísticas de uso.</p>
-    <div id="admin-content"></div>
-  </section>
-</main>
+  <div class="content">
+    <main>
+      <!-- ============ EXPLORE ============ -->
+      <section class="view active" id="view-explore">
+        <div class="page-head">
+          <div>
+            <h1>Explorar cargadores</h1>
+            <p>Buscá entre las estaciones de la red filtrando por tipo, conector, potencia, costo y estado.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="filters" id="exploreFilters">
+            <div class="field">
+              <label for="f-chargerType">Tipo de cargador</label>
+              <select id="f-chargerType">
+                <option value="">Todos</option>
+                <option>AC Level 1</option>
+                <option>AC Level 2</option>
+                <option>DC Fast Charger</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-connectorType">Conector</label>
+              <select id="f-connectorType">
+                <option value="">Todos</option>
+                <option>Type 2</option>
+                <option>CCS</option>
+                <option>CHAdeMO</option>
+                <option>Tesla</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-status">Estado</label>
+              <select id="f-status">
+                <option value="">Todos</option>
+                <option value="0">Disponible</option>
+                <option value="1">En uso</option>
+                <option value="2">Fuera de servicio</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-operator">Operador</label>
+              <input id="f-operator" placeholder="Ej. EVgo" />
+            </div>
+            <div class="field">
+              <label for="f-minCap">Potencia mínima (kW)</label>
+              <input id="f-minCap" type="number" min="0" placeholder="Ej. 150" />
+            </div>
+            <div class="field">
+              <label for="f-maxCost">Costo máximo (USD/kWh)</label>
+              <input id="f-maxCost" type="number" min="0" step="0.01" placeholder="Ej. 0.30" />
+            </div>
+          </div>
+          <div class="filters-foot">
+            <label class="check"><input type="checkbox" id="f-renew" />Solo energía renovable</label>
+            <div class="page-actions">
+              <span class="filter-count" id="filterCount"></span>
+              <button class="btn ghost" onclick="resetFilters()"><svg class="i"><use href="#i-reset"/></svg>Limpiar</button>
+              <button class="btn primary" onclick="doSearch(1)"><svg class="i"><use href="#i-search"/></svg>Buscar</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="explore-bar"></div>
+        <div id="explore-results"></div>
+        <div id="explore-pager"></div>
+      </section>
+
+      <!-- ============ NEARBY ============ -->
+      <section class="view" id="view-nearby">
+        <div class="page-head">
+          <div>
+            <h1>Cargadores cercanos</h1>
+            <p>Estaciones ordenadas por distancia a una coordenada, mediante una consulta geoespacial sobre un índice <code>2dsphere</code>.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="filters" id="nearbyFilters">
+            <div class="field"><label for="n-lat">Latitud</label><input id="n-lat" type="number" step="any" value="37.7749" /></div>
+            <div class="field"><label for="n-lng">Longitud</label><input id="n-lng" type="number" step="any" value="-122.4194" /></div>
+            <div class="field"><label for="n-maxKm">Radio máximo (km)</label><input id="n-maxKm" type="number" min="1" value="500" /></div>
+            <div class="field"><label for="n-limit">Cantidad de resultados</label><input id="n-limit" type="number" min="1" value="24" /></div>
+          </div>
+          <div class="filters-foot">
+            <button class="btn" onclick="useMyLocation()"><svg class="i"><use href="#i-crosshair"/></svg>Usar mi ubicación</button>
+            <button class="btn primary" onclick="doNearby()"><svg class="i"><use href="#i-search"/></svg>Buscar</button>
+          </div>
+        </div>
+
+        <div id="nearby-bar"></div>
+        <div id="nearby-results"></div>
+      </section>
+
+      <!-- ============ SESSIONS ============ -->
+      <section class="view" id="view-sessions">
+        <div class="page-head">
+          <div>
+            <h1>Mis sesiones de carga</h1>
+            <p>Iniciá una carga desde Explorar y finalizala acá. Al detenerla se calculan la energía entregada y el costo.</p>
+          </div>
+          <div class="page-actions" id="sessionsActions"></div>
+        </div>
+        <div id="sessions-content"></div>
+      </section>
+
+      <!-- ============ ADMIN ============ -->
+      <section class="view" id="view-admin">
+        <div class="page-head">
+          <div>
+            <h1>Administración</h1>
+            <p>Estado de la red, estadísticas de uso y gestión de estaciones.</p>
+          </div>
+          <div class="page-actions" id="adminActions"></div>
+        </div>
+        <div class="subtabs" id="adminTabs">
+          <button class="subtab active" data-admin="overview">Resumen</button>
+          <button class="subtab" data-admin="stations">Estaciones</button>
+        </div>
+        <div id="admin-content"></div>
+      </section>
+    </main>
+  </div>
+</div>
 
 <!-- ============ LOGIN MODAL ============ -->
 <div class="overlay" id="authModal">
-  <div class="modal">
-    <h3 id="authTitle">Iniciar sesión</h3>
-    <p class="hint" id="authHint">Accedé para iniciar cargas y ver el panel.</p>
-    <div class="demo-note">Cuenta de prueba (admin): <b>admin@cargadores.com</b> / <b>Admin123!</b></div>
-    <div class="err" id="authErr"></div>
-    <div class="field" id="nameField" style="display:none">
-      <label>Nombre</label><input id="a-name" placeholder="Tu nombre" />
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="modal-head">
+      <div>
+        <h3 id="authTitle">Iniciar sesión</h3>
+        <p id="authHint">Accedé para iniciar cargas y ver el panel.</p>
+      </div>
+      <button class="modal-close" onclick="closeAuth()" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
     </div>
-    <div class="field"><label>Email</label><input id="a-email" type="email" value="admin@cargadores.com" /></div>
-    <div class="field"><label>Contraseña</label><input id="a-pass" type="password" value="Admin123!" /></div>
-    <div class="foot">
-      <button class="btn" onclick="closeAuth()">Cancelar</button>
+    <div class="modal-body">
+      <div class="demo-note">Cuenta de prueba (admin): <b>admin@cargadores.com</b> / <b>Admin123!</b></div>
+      <div class="alert" id="authErr"><svg class="i"><use href="#i-alert"/></svg><span></span></div>
+      <div class="field" id="nameField" style="display:none">
+        <label for="a-name">Nombre</label><input id="a-name" placeholder="Tu nombre" autocomplete="name" />
+      </div>
+      <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" value="admin@cargadores.com" autocomplete="email" /></div>
+      <div class="field"><label for="a-pass">Contraseña</label><input id="a-pass" type="password" value="Admin123!" autocomplete="current-password" /></div>
+    </div>
+    <div class="modal-foot">
       <button class="btn primary" id="authSubmit" onclick="submitAuth()">Entrar</button>
+      <div class="switch-auth" id="switchAuth">
+        ¿No tenés cuenta? <a onclick="setAuthMode('register')">Registrate</a>
+      </div>
     </div>
-    <div class="switch-auth" id="switchAuth">
-      ¿No tenés cuenta? <a onclick="setAuthMode('register')">Registrate</a>
+  </div>
+</div>
+
+<!-- ============ STATION FORM MODAL ============ -->
+<div class="overlay" id="stationModal">
+  <div class="modal lg" role="dialog" aria-modal="true" aria-labelledby="stationTitle">
+    <div class="modal-head">
+      <div>
+        <h3 id="stationTitle">Nueva estación</h3>
+        <p id="stationHint"></p>
+      </div>
+      <button class="modal-close" onclick="closeStationForm()" aria-label="Cerrar"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <form class="modal-body scroll" id="stationForm" novalidate onsubmit="event.preventDefault(); submitStation()">
+      <div class="alert" id="stationErr"><svg class="i"><use href="#i-alert"/></svg><span></span></div>
+      <div class="form-grid">
+        <div class="field"><label for="s-code">Código <span class="req">*</span></label><input id="s-code" maxlength="20" placeholder="Ej. EVS05001" /></div>
+        <div class="field"><label for="s-operator">Operador</label><select id="s-operator"></select></div>
+        <div class="field full"><label for="s-address">Dirección <span class="req">*</span></label><input id="s-address" maxlength="200" placeholder="Calle, número, ciudad" /></div>
+        <div class="field"><label for="s-lat">Latitud <span class="req">*</span></label><input id="s-lat" type="number" step="any" min="-90" max="90" placeholder="Entre -90 y 90" /></div>
+        <div class="field"><label for="s-lng">Longitud <span class="req">*</span></label><input id="s-lng" type="number" step="any" min="-180" max="180" placeholder="Entre -180 y 180" /></div>
+        <div class="field"><label for="s-type">Tipo de cargador</label><select id="s-type"></select></div>
+        <div class="field"><label for="s-cap">Potencia (kW) <span class="req">*</span></label><input id="s-cap" type="number" min="1" max="1000" step="1" placeholder="Ej. 150" /></div>
+        <div class="field"><label for="s-cost">Costo (USD/kWh) <span class="req">*</span></label><input id="s-cost" type="number" min="0" max="100" step="0.01" placeholder="Ej. 0.30" /></div>
+        <div class="field"><label for="s-avail">Disponibilidad</label><select id="s-avail"></select></div>
+        <div class="field"><label for="s-parking">Lugares de estacionamiento</label><input id="s-parking" type="number" min="0" step="1" placeholder="Ej. 4" /></div>
+        <div class="field create-only"><label for="s-year">Año de instalación</label><input id="s-year" type="number" min="1900" max="2100" step="1" /></div>
+        <div class="field create-only"><label for="s-maint">Frecuencia de mantenimiento</label><select id="s-maint"></select></div>
+        <div class="field edit-only"><label for="s-status">Estado</label><select id="s-status"></select><span class="hint" id="s-status-hint"></span></div>
+        <div class="field full"><label>Conectores <span class="req">*</span></label><div class="check-group" id="s-connectors"></div></div>
+        <div class="field full"><label class="check"><input type="checkbox" id="s-renew" />Abastecida con energía renovable</label></div>
+      </div>
+      <button type="submit" style="display:none"></button>
+    </form>
+    <div class="modal-foot row">
+      <button class="btn" onclick="closeStationForm()">Cancelar</button>
+      <button class="btn primary" id="stationSubmit" onclick="submitStation()">Crear estación</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CONFIRM MODAL ============ -->
+<div class="overlay" id="confirmModal">
+  <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMsg">
+    <div class="modal-head">
+      <div>
+        <h3 id="confirmTitle"></h3>
+        <p id="confirmMsg"></p>
+      </div>
+    </div>
+    <div class="modal-foot row plain">
+      <button class="btn" id="confirmCancel">Cancelar</button>
+      <button class="btn primary" id="confirmOk">Confirmar</button>
     </div>
   </div>
 </div>
@@ -315,6 +668,13 @@ const state = {
   user: JSON.parse(localStorage.getItem('ev_user') || 'null'),
   authMode: 'login',
   explore: { page: 1, pageSize: 12, total: 0 },
+  admin: {
+    tab: 'overview', page: 1, pageSize: 20, total: 0,
+    filters: { status: '', chargerType: '', operator: '' },
+    items: {}, editing: null, highlight: null,
+  },
+  timer: null,
+  confirmDone: null,
 };
 
 const STATION_STATUS = [
@@ -323,6 +683,13 @@ const STATION_STATUS = [
   { label: 'Fuera de servicio', cls: 'bad' },
 ];
 const SESSION_STATUS = ['Activa', 'Completada'];
+
+// Valores del dataset, usados en los formularios de administración.
+const OPERATORS = ['ChargePoint', 'EVgo', 'Greenlots', 'Ionity', 'Tesla'];
+const CHARGER_TYPES = ['AC Level 1', 'AC Level 2', 'DC Fast Charger'];
+const CONNECTORS = ['Type 2', 'CCS', 'CHAdeMO', 'Tesla'];
+const AVAILABILITY = ['24/7', '6:00-22:00', '9:00-18:00'];
+const MAINTENANCE = [['Monthly', 'Mensual'], ['Quarterly', 'Trimestral'], ['Annually', 'Anual']];
 
 // ============================================================
 //  Helper de API (fetch con token + JSON)
@@ -342,7 +709,9 @@ async function api(path, { method = 'GET', body = null, auth = false } = {}) {
   if (text) { try { data = JSON.parse(text); } catch { data = text; } }
 
   if (!res.ok) {
-    const msg = (data && (data.error || data.title)) || ('Error ' + res.status);
+    // Errores de validación de ASP.NET: { title, errors: { Campo: ["mensaje"] } }
+    const validation = data && data.errors && Object.values(data.errors).flat()[0];
+    const msg = (data && (data.error || validation || data.title)) || ('Error ' + res.status);
     throw new Error(msg);
   }
   return data;
@@ -351,25 +720,76 @@ async function api(path, { method = 'GET', body = null, auth = false } = {}) {
 // ============================================================
 //  Toasts
 // ============================================================
-function toast(msg, type = '') {
+function toast(msg, type = 'ok') {
   const el = document.createElement('div');
   el.className = 'toast ' + type;
-  el.textContent = msg;
+  el.innerHTML = `${icon(type === 'err' ? 'alert' : 'check')}<span></span>`;
+  el.querySelector('span').textContent = msg;
   document.getElementById('toasts').appendChild(el);
-  setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3200);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 250); }, 3600);
 }
 
 // ============================================================
 //  Utilidades de formato
 // ============================================================
+const icon = (name) => `<svg class="i"><use href="#i-${name}"/></svg>`;
 const money = n => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const int = n => Number(n || 0).toLocaleString('es-AR');
+const kwh = n => Number(n || 0).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' kWh';
+const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '0%';
 function fmtDate(s) {
   if (!s) return '—';
-  const d = new Date(s);
-  return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return new Date(s).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
-function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
-function emptyState(msg, action = '') { return `<div class="empty"><p>${msg}</p>${action}</div>`; }
+function fmtDuration(ms) {
+  const t = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+  return [h, m, s].map(x => String(x).padStart(2, '0')).join(':');
+}
+function initials(name) {
+  return String(name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+function selectOptions(list, selected) {
+  return list.map(o => {
+    const [value, label] = Array.isArray(o) ? o : [o, o];
+    return `<option value="${esc(value)}" ${String(value) === String(selected) ? 'selected' : ''}>${esc(label)}</option>`;
+  }).join('');
+}
+// Agrega el valor actual a la lista si no está (datos cargados por fuera del formulario).
+const withValue = (list, v) => (v == null || v === '' || list.includes(v)) ? list : [v, ...list];
+function setAlert(id, msg) {
+  const el = document.getElementById(id);
+  el.querySelector('span').textContent = msg;
+  el.classList.toggle('show', !!msg);
+}
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+function emptyState(title, msg = '', action = '', iconName = 'inbox') {
+  return `<div class="card"><div class="empty">
+    <div class="empty-icon">${icon(iconName)}</div>
+    <h3>${title}</h3>${msg ? `<p>${msg}</p>` : '<p></p>'}${action}
+  </div></div>`;
+}
+function errorState(msg) {
+  return `<div class="card"><div class="empty error">
+    <div class="empty-icon">${icon('alert')}</div>
+    <h3>No se pudo cargar la información</h3><p>${esc(msg)}</p>
+  </div></div>`;
+}
+function skeletonGrid(n = 6) {
+  const card = `<div class="station sk-card">
+    <div class="skeleton" style="height:16px;width:45%"></div>
+    <div class="skeleton" style="height:12px;width:80%"></div>
+    <div class="skeleton" style="height:48px;width:100%;margin-top:6px"></div>
+    <div class="skeleton" style="height:12px;width:60%"></div>
+    <div class="skeleton" style="height:30px;width:100%;margin-top:auto"></div>
+  </div>`;
+  return '<div class="grid">' + card.repeat(n) + '</div>';
+}
+function skeletonBlock() {
+  return `<div class="kpis">${'<div class="kpi"><div class="skeleton" style="height:12px;width:50%"></div><div class="skeleton" style="height:26px;width:70%;margin-top:10px"></div></div>'.repeat(4)}</div>
+    <div class="card"><div class="card-body"><div class="skeleton" style="height:160px"></div></div></div>`;
+}
 
 // ============================================================
 //  Auth UI
@@ -378,35 +798,49 @@ function renderAuthArea() {
   const el = document.getElementById('authArea');
   if (state.user) {
     el.innerHTML = `
-      <div class="who"><b>${esc(state.user.displayName)}</b><span>${esc(state.user.email)}</span></div>
-      <span class="role-chip">${esc(state.user.role)}</span>
-      <button class="btn sm" onclick="logout()">Salir</button>`;
-    document.getElementById('adminTab').classList.toggle('hidden', state.user.role !== 'Admin');
+      <div class="user-card">
+        <div class="avatar">${esc(initials(state.user.displayName))}</div>
+        <div class="user-meta">
+          <b>${esc(state.user.displayName)}</b>
+          <span>${esc(state.user.email)}</span>
+          <span class="role-tag">${esc(state.user.role)}</span>
+        </div>
+        <button class="icon-btn" onclick="logout()" title="Cerrar sesión" aria-label="Cerrar sesión">${icon('logout')}</button>
+      </div>`;
+    document.getElementById('adminGroup').classList.toggle('hidden', state.user.role !== 'Admin');
   } else {
-    el.innerHTML = `<button class="btn" onclick="openAuth()">Iniciar sesión</button>`;
-    document.getElementById('adminTab').classList.add('hidden');
+    el.innerHTML = `<button class="side-login" onclick="openAuth()">${icon('login')}Iniciar sesión</button>`;
+    document.getElementById('adminGroup').classList.add('hidden');
   }
 }
 
-function openAuth() { setAuthMode('login'); document.getElementById('authErr').style.display = 'none'; document.getElementById('authModal').classList.add('show'); }
+function openAuth() {
+  setAuthMode('login');
+  showAuthError('');
+  document.getElementById('authModal').classList.add('show');
+  setTimeout(() => document.getElementById('a-email').focus(), 50);
+}
 function closeAuth() { document.getElementById('authModal').classList.remove('show'); }
+function showAuthError(msg) { setAlert('authErr', msg); }
 function setAuthMode(mode) {
   state.authMode = mode;
   const isReg = mode === 'register';
   document.getElementById('authTitle').textContent = isReg ? 'Crear cuenta' : 'Iniciar sesión';
-  document.getElementById('authHint').textContent = isReg ? 'Registrate como conductor para cargar.' : 'Accedé para iniciar cargas y ver el panel.';
+  document.getElementById('authHint').textContent = isReg ? 'Registrate como conductor para iniciar cargas.' : 'Accedé para iniciar cargas y ver el panel.';
   document.getElementById('nameField').style.display = isReg ? 'flex' : 'none';
-  document.getElementById('authSubmit').textContent = isReg ? 'Registrarme' : 'Entrar';
+  document.getElementById('authSubmit').textContent = isReg ? 'Crear cuenta' : 'Entrar';
   document.getElementById('switchAuth').innerHTML = isReg
-    ? '¿Ya tenés cuenta? <a onclick="setAuthMode(\'login\')">Entrá</a>'
+    ? '¿Ya tenés cuenta? <a onclick="setAuthMode(\'login\')">Iniciá sesión</a>'
     : '¿No tenés cuenta? <a onclick="setAuthMode(\'register\')">Registrate</a>';
+  showAuthError('');
 }
 
 async function submitAuth() {
   const email = document.getElementById('a-email').value.trim();
   const password = document.getElementById('a-pass').value;
-  const errEl = document.getElementById('authErr');
-  errEl.style.display = 'none';
+  const btn = document.getElementById('authSubmit');
+  showAuthError('');
+  btn.classList.add('loading');
   try {
     let data;
     if (state.authMode === 'register') {
@@ -422,10 +856,11 @@ async function submitAuth() {
     renderAuthArea();
     closeAuth();
     toast('Sesión iniciada como ' + data.displayName, 'ok');
-    if (document.querySelector('.view.active').id === 'view-sessions') loadSessions();
+    if (activeView() === 'sessions') loadSessions();
   } catch (e) {
-    errEl.textContent = e.message;
-    errEl.style.display = 'block';
+    showAuthError(e.message);
+  } finally {
+    btn.classList.remove('loading');
   }
 }
 
@@ -433,61 +868,85 @@ function logout() {
   state.token = null; state.user = null;
   localStorage.removeItem('ev_token'); localStorage.removeItem('ev_user');
   renderAuthArea();
-  const active = document.querySelector('.view.active').id;
-  if (active === 'view-sessions') loadSessions();
-  if (active === 'view-admin') switchView('explore');
+  const active = activeView();
+  if (active === 'sessions') loadSessions();
+  if (active === 'admin') switchView('explore');
 }
 
 // ============================================================
-//  Tabs
+//  Navegación
 // ============================================================
+function activeView() { return document.querySelector('.view.active').id.replace('view-', ''); }
 function switchView(name) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
+  document.querySelectorAll('.nav-item').forEach(t => t.classList.toggle('active', t.dataset.view === name));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  if (name !== 'sessions') stopTimer();
   if (name === 'sessions') loadSessions();
   if (name === 'admin') loadAdmin();
+  window.scrollTo({ top: 0 });
 }
-document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
+document.querySelectorAll('.nav-item').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
 
 // ============================================================
 //  Tarjeta de estación (reutilizable)
 // ============================================================
 function stationCard(s) {
   const st = STATION_STATUS[s.status] || STATION_STATUS[0];
-  const connectors = (s.connectorTypes || []).map(c => `<span class="chip">${esc(c)}</span>`).join('');
-  const distance = (s.distanceKm != null) ? `<span class="dist">${s.distanceKm} km</span>` : '';
   const canCharge = st.cls === 'ok';
+  const connectors = (s.connectorTypes || []).map(c => `<span class="tag outline">${esc(c)}</span>`).join('');
+  const distance = (s.distanceKm != null)
+    ? `<div class="distance">${icon('pin')}${Number(s.distanceKm).toLocaleString('es-AR', { maximumFractionDigits: 1 })} km</div>` : '';
   return `
-    <div class="station">
-      <div class="row1">
-        <div>
-          <div class="code">${esc(s.stationId)}${distance}</div>
-          <div class="addr">${esc(s.address)}</div>
+    <article class="station">
+      <div class="station-top">
+        <div class="station-title">
+          <div>
+            <div class="station-code">${esc(s.stationId)}</div>
+            <div class="station-op">${esc(s.operator)}</div>
+          </div>
+          <span class="status ${st.cls}">${st.label}</span>
         </div>
-        <span class="badge ${st.cls}">${st.label}</span>
+        <div class="station-addr">${icon('pin')}<span>${esc(s.address)}</span></div>
+        ${distance}
       </div>
-      <div class="chips">
-        <span class="chip">${esc(s.chargerType)}</span>
-        <span class="chip">${s.capacityKw} kW</span>
-        <span class="chip">${esc(s.operator)}</span>
-        ${s.renewableEnergy ? '<span class="chip renewable">Renovable</span>' : ''}
+      <div class="metrics">
+        <div class="metric"><div class="k">Potencia</div><div class="v">${s.capacityKw} <small>kW</small></div></div>
+        <div class="metric"><div class="k">Precio</div><div class="v">${money(s.costPerKwh)} <small>/kWh</small></div></div>
+        <div class="metric"><div class="k">Rating</div><div class="v">${Number(s.rating).toFixed(1)} <small>/ 5</small></div></div>
       </div>
-      <div class="chips">${connectors}</div>
-      <div class="meta">
-        <span class="price">${money(s.costPerKwh)} <small>/ kWh</small></span>
-        <span>Rating ${Number(s.rating).toFixed(1)}</span>
-        <span>${s.parkingSpots} lugares</span>
+      <div class="tags">
+        <span class="tag">${icon('plug')}${esc(s.chargerType)}</span>
+        ${connectors}
+        ${s.renewableEnergy ? `<span class="tag green">${icon('leaf')}Renovable</span>` : ''}
       </div>
-      <div class="actions">
-        <button class="btn primary sm" ${canCharge ? '' : 'disabled'} onclick="startCharge('${s.id}','${esc(s.stationId)}')">Iniciar carga</button>
-        <button class="btn sm" onclick="nearbyFrom(${s.latitude},${s.longitude})">Ver cercanas</button>
+      <div class="station-foot">
+        <span class="aux">${icon('parking')}${s.parkingSpots} lugares</span>
+        <div class="btns">
+          <button class="btn sm" onclick="nearbyFrom(${s.latitude},${s.longitude})">Ver cercanas</button>
+          <button class="btn sm primary" ${canCharge ? '' : 'disabled'} onclick="startCharge('${esc(s.id)}','${esc(s.stationId)}', this)">Iniciar carga</button>
+        </div>
       </div>
-    </div>`;
+    </article>`;
 }
 
 // ============================================================
 //  Explorar
 // ============================================================
+const FILTER_IDS = ['f-chargerType', 'f-connectorType', 'f-status', 'f-operator', 'f-minCap', 'f-maxCost'];
+
+function updateFilterCount() {
+  const n = FILTER_IDS.filter(id => document.getElementById(id).value.trim() !== '').length
+    + (document.getElementById('f-renew').checked ? 1 : 0);
+  document.getElementById('filterCount').textContent = n ? `${n} ${n === 1 ? 'filtro activo' : 'filtros activos'}` : '';
+}
+
+function resetFilters() {
+  FILTER_IDS.forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-renew').checked = false;
+  updateFilterCount();
+  doSearch(1);
+}
+
 async function doSearch(page = 1) {
   state.explore.page = page;
   const p = new URLSearchParams();
@@ -499,32 +958,62 @@ async function doSearch(page = 1) {
   const stt = document.getElementById('f-status').value; if (stt) p.set('status', stt);
   if (document.getElementById('f-renew').checked) p.set('renewableOnly', 'true');
   p.set('page', page); p.set('pageSize', state.explore.pageSize);
+  updateFilterCount();
 
   const box = document.getElementById('explore-results');
-  box.innerHTML = '<div class="spinner"></div>';
+  const bar = document.getElementById('explore-bar');
+  bar.innerHTML = '<div class="results-bar"><div class="skeleton" style="height:14px;width:160px"></div></div>';
+  box.innerHTML = skeletonGrid(6);
   document.getElementById('explore-pager').innerHTML = '';
   try {
     const data = await api('/api/stations?' + p.toString());
     state.explore.total = data.total;
     if (!data.items.length) {
-      box.innerHTML = emptyState('No hay estaciones con esos filtros.');
+      bar.innerHTML = '<div class="results-bar"></div>';
+      box.innerHTML = emptyState('Sin resultados', 'No hay estaciones que coincidan con esos filtros. Probá ampliar la búsqueda.',
+        `<button class="btn" onclick="resetFilters()">${icon('reset')}Limpiar filtros</button>`, 'search');
       return;
     }
+    const from = (page - 1) * state.explore.pageSize + 1;
+    const to = from + data.items.length - 1;
+    bar.innerHTML = `<div class="results-bar">
+      <span class="count num">${int(data.total)} estaciones</span>
+      <span class="range num">Mostrando ${int(from)}–${int(to)}</span>
+    </div>`;
     box.innerHTML = '<div class="grid">' + data.items.map(stationCard).join('') + '</div>';
     renderPager(data.total, page);
   } catch (e) {
-    box.innerHTML = emptyState(esc(e.message));
+    bar.innerHTML = '<div class="results-bar"></div>';
+    box.innerHTML = errorState(e.message);
   }
 }
 
-function renderPager(total, page) {
-  const pages = Math.ceil(total / state.explore.pageSize);
-  document.getElementById('explore-pager').innerHTML = `
+// Paginador reutilizable: onGo es el nombre de la función que recibe el número de página.
+function pagerHtml(total, page, pageSize, onGo) {
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const nums = new Set([1, pages, page - 1, page, page + 1].filter(n => n >= 1 && n <= pages));
+  let prev = 0, links = '';
+  [...nums].sort((a, b) => a - b).forEach(n => {
+    if (prev && n - prev > 1) links += '<span class="page-gap">…</span>';
+    links += `<button class="page-num ${n === page ? 'current' : ''}" onclick="${onGo}(${n})">${int(n)}</button>`;
+    prev = n;
+  });
+  return `
     <div class="pager">
-      <button class="btn sm" ${page <= 1 ? 'disabled' : ''} onclick="doSearch(${page - 1})">Anterior</button>
-      <span class="info">Página ${page} de ${pages} · ${total.toLocaleString('es-AR')} estaciones</span>
-      <button class="btn sm" ${page >= pages ? 'disabled' : ''} onclick="doSearch(${page + 1})">Siguiente</button>
+      <span class="info num">Página ${int(page)} de ${int(pages)}</span>
+      <div class="ctrls">
+        <button class="btn sm icon" ${page <= 1 ? 'disabled' : ''} onclick="${onGo}(${page - 1})" aria-label="Página anterior">${icon('left')}</button>
+        ${links}
+        <button class="btn sm icon" ${page >= pages ? 'disabled' : ''} onclick="${onGo}(${page + 1})" aria-label="Página siguiente">${icon('right')}</button>
+      </div>
     </div>`;
+}
+function renderPager(total, page) {
+  document.getElementById('explore-pager').innerHTML = pagerHtml(total, page, state.explore.pageSize, 'goPage');
+}
+function goPage(n) {
+  doSearch(n);
+  document.getElementById('explore-bar').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ============================================================
@@ -547,146 +1036,518 @@ async function doNearby() {
   const lat = document.getElementById('n-lat').value, lng = document.getElementById('n-lng').value;
   const maxKm = document.getElementById('n-maxKm').value || 500, limit = document.getElementById('n-limit').value || 24;
   const box = document.getElementById('nearby-results');
-  box.innerHTML = '<div class="spinner"></div>';
+  const bar = document.getElementById('nearby-bar');
+  bar.innerHTML = '<div class="results-bar"><div class="skeleton" style="height:14px;width:160px"></div></div>';
+  box.innerHTML = skeletonGrid(6);
   try {
-    const items = await api(`/api/stations/nearby?lat=${lat}&lng=${lng}&maxKm=${maxKm}&limit=${limit}`);
-    if (!items.length) { box.innerHTML = emptyState('No hay estaciones en ese radio. Probá aumentarlo.'); return; }
+    const items = await api(`/api/stations/nearby?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&maxKm=${encodeURIComponent(maxKm)}&limit=${encodeURIComponent(limit)}`);
+    if (!items.length) {
+      bar.innerHTML = '<div class="results-bar"></div>';
+      box.innerHTML = emptyState('Sin estaciones en el radio', 'No hay estaciones dentro de esa distancia. Probá aumentar el radio de búsqueda.', '', 'pin');
+      return;
+    }
+    bar.innerHTML = `<div class="results-bar">
+      <span class="count num">${int(items.length)} estaciones</span>
+      <span class="range num">Dentro de ${int(maxKm)} km de ${esc(lat)}, ${esc(lng)}</span>
+    </div>`;
     box.innerHTML = '<div class="grid">' + items.map(stationCard).join('') + '</div>';
   } catch (e) {
-    box.innerHTML = emptyState(esc(e.message));
+    bar.innerHTML = '<div class="results-bar"></div>';
+    box.innerHTML = errorState(e.message);
   }
 }
 
 // ============================================================
 //  Sesiones de carga
 // ============================================================
-async function startCharge(stationId, code) {
-  if (!state.user) { toast('Iniciá sesión para cargar', 'err'); openAuth(); return; }
+async function startCharge(stationId, code, btn) {
+  if (!state.user) { toast('Iniciá sesión para iniciar una carga', 'err'); openAuth(); return; }
+  if (btn) btn.classList.add('loading');
   try {
     await api('/api/sessions/start', { method: 'POST', auth: true, body: { stationId } });
     toast('Carga iniciada en ' + code, 'ok');
-    const active = document.querySelector('.view.active').id;
-    if (active === 'view-explore') doSearch(state.explore.page);
-    else if (active === 'view-nearby') doNearby();
-  } catch (e) { toast(e.message, 'err'); }
+    const active = activeView();
+    if (active === 'explore') doSearch(state.explore.page);
+    else if (active === 'nearby') doNearby();
+  } catch (e) {
+    toast(e.message, 'err');
+    if (btn) btn.classList.remove('loading');
+  }
 }
 
-async function stopCharge(id, kwhInputId) {
+async function stopCharge(id, kwhInputId, btn) {
   const val = document.getElementById(kwhInputId).value;
   const body = val ? { energyKwh: Number(val) } : {};
+  if (btn) btn.classList.add('loading');
   try {
     const s = await api(`/api/sessions/${id}/stop`, { method: 'POST', auth: true, body });
-    toast(`Carga finalizada: ${s.energyKwh} kWh · ${money(s.cost)}`, 'ok');
+    toast(`Carga finalizada: ${kwh(s.energyKwh)} · ${money(s.cost)}`, 'ok');
     loadSessions();
-  } catch (e) { toast(e.message, 'err'); }
+  } catch (e) {
+    toast(e.message, 'err');
+    if (btn) btn.classList.remove('loading');
+  }
+}
+
+function stopTimer() { if (state.timer) { clearInterval(state.timer); state.timer = null; } }
+function tickTimers() {
+  document.querySelectorAll('[data-start]').forEach(el => {
+    el.textContent = fmtDuration(Date.now() - new Date(el.dataset.start).getTime());
+  });
 }
 
 async function loadSessions() {
+  stopTimer();
   const box = document.getElementById('sessions-content');
   if (!state.user) {
-    box.innerHTML = emptyState('Iniciá sesión para ver tus cargas.', '<button class="btn primary" onclick="openAuth()">Iniciar sesión</button>');
+    box.innerHTML = emptyState('Iniciá sesión para ver tus cargas', 'Tu historial de sesiones, energía consumida y costos aparece acá.',
+      `<button class="btn primary" onclick="openAuth()">${icon('login')}Iniciar sesión</button>`, 'lock');
     return;
   }
-  box.innerHTML = '<div class="spinner"></div>';
+  box.innerHTML = skeletonBlock();
   try {
     const sessions = await api('/api/sessions/history', { auth: true });
     const active = sessions.filter(s => s.status === 0);
     const done = sessions.filter(s => s.status === 1);
+    const totalEnergy = done.reduce((a, s) => a + (s.energyKwh || 0), 0);
+    const totalCost = done.reduce((a, s) => a + Number(s.cost || 0), 0);
     let html = '';
 
+    html += `<div class="kpis">
+      <div class="kpi"><div class="k">Cargas en curso</div><div class="v">${int(active.length)}</div></div>
+      <div class="kpi"><div class="k">Cargas completadas</div><div class="v">${int(done.length)}</div></div>
+      <div class="kpi"><div class="k">Energía consumida</div><div class="v">${kwh(totalEnergy)}</div></div>
+      <div class="kpi"><div class="k">Gasto total</div><div class="v">${money(totalCost)}</div><div class="s">${done.length ? 'Promedio ' + money(totalCost / done.length) + ' por carga' : '&nbsp;'}</div></div>
+    </div>`;
+
     if (active.length) {
-      html += '<div class="section-title">Cargas en curso</div>';
+      html += '<div class="section-title">Cargas en curso</div><div class="live">';
       html += active.map(s => `
-        <div class="panel active-session">
-          <div class="row">
-            <div>
-              <div class="title"><span class="dot"></span>${esc(s.stationCode)} · ${esc(s.stationAddress)}</div>
-              <div class="when">Iniciada: ${fmtDate(s.startTime)}</div>
-            </div>
-            <div class="controls">
-              <input id="kwh-${s.id}" type="number" step="0.1" placeholder="kWh (opc.)" />
-              <button class="btn danger" onclick="stopCharge('${s.id}','kwh-${s.id}')">Detener carga</button>
+        <div class="card live-card">
+          <div class="live-info">
+            <div class="live-icon pulse">${icon('bolt')}</div>
+            <div style="min-width:0">
+              <div class="live-title">${esc(s.stationCode)}</div>
+              <div class="live-sub">${esc(s.stationAddress)}</div>
+              <div class="live-sub">Iniciada el ${fmtDate(s.startTime)}</div>
             </div>
           </div>
+          <div>
+            <div class="live-sub">Tiempo transcurrido</div>
+            <div class="live-timer" data-start="${esc(s.startTime)}">00:00:00</div>
+          </div>
+          <div class="live-ctrls">
+            <input class="input" id="kwh-${esc(s.id)}" type="number" min="0" step="0.1" placeholder="kWh (opcional)" title="Si no se informa, se estima por potencia y duración" />
+            <button class="btn sm danger" onclick="stopCharge('${esc(s.id)}','kwh-${esc(s.id)}', this)">${icon('stop')}Detener carga</button>
+          </div>
         </div>`).join('');
+      html += '</div>';
     }
 
     html += '<div class="section-title">Historial</div>';
     if (!done.length) {
-      html += emptyState('Todavía no completaste ninguna carga.');
+      html += emptyState('Sin cargas completadas', 'Cuando finalices una carga, vas a ver acá la energía entregada y el costo.',
+        `<button class="btn" onclick="switchView('explore')">${icon('search')}Buscar un cargador</button>`);
     } else {
-      html += `<table class="data"><thead><tr>
-        <th>Estación</th><th>Inicio</th><th>Fin</th><th>Energía</th><th>Costo</th><th>Estado</th>
+      html += `<div class="card"><div class="table-wrap"><table class="data"><thead><tr>
+        <th>Estación</th><th>Inicio</th><th>Fin</th><th class="r">Energía</th><th class="r">Costo</th><th>Estado</th>
         </tr></thead><tbody>` +
         done.map(s => `<tr>
-          <td><b>${esc(s.stationCode)}</b><br><span class="sub">${esc(s.stationAddress)}</span></td>
-          <td>${fmtDate(s.startTime)}</td><td>${fmtDate(s.endTime)}</td>
-          <td>${s.energyKwh} kWh</td><td><b>${money(s.cost)}</b></td>
-          <td><span class="badge ok">${SESSION_STATUS[s.status]}</span></td>
-        </tr>`).join('') + '</tbody></table>';
+          <td><div class="cell-main">${esc(s.stationCode)}</div><div class="cell-sub">${esc(s.stationAddress)}</div></td>
+          <td class="num">${fmtDate(s.startTime)}</td><td class="num">${fmtDate(s.endTime)}</td>
+          <td class="r num">${kwh(s.energyKwh)}</td><td class="r num cell-main">${money(s.cost)}</td>
+          <td><span class="status ok">${SESSION_STATUS[s.status]}</span></td>
+        </tr>`).join('') + '</tbody></table></div></div>';
     }
     box.innerHTML = html;
+    if (active.length) { tickTimers(); state.timer = setInterval(tickTimers, 1000); }
   } catch (e) {
-    box.innerHTML = emptyState(esc(e.message));
+    box.innerHTML = errorState(e.message);
   }
 }
 
 // ============================================================
 //  Admin
 // ============================================================
-async function loadAdmin() {
+function loadAdmin() {
   const box = document.getElementById('admin-content');
+  const actions = document.getElementById('adminActions');
+  const tabs = document.getElementById('adminTabs');
   if (!state.user || state.user.role !== 'Admin') {
-    box.innerHTML = emptyState('Solo administradores. Entrá con la cuenta admin.');
+    actions.innerHTML = '';
+    tabs.style.display = 'none';
+    box.innerHTML = emptyState('Acceso restringido', 'Esta sección es solo para administradores. Entrá con la cuenta admin.', '', 'lock');
     return;
   }
-  box.innerHTML = '<div class="spinner"></div>';
+  tabs.style.display = '';
+  document.querySelectorAll('.subtab').forEach(t => t.classList.toggle('active', t.dataset.admin === state.admin.tab));
+  if (state.admin.tab === 'stations') {
+    actions.innerHTML = `<button class="btn primary" onclick="openStationForm()">${icon('plus')}Nueva estación</button>`;
+    loadAdminStations();
+  } else {
+    actions.innerHTML = `<button class="btn" onclick="loadAdmin()">${icon('refresh')}Actualizar</button>`;
+    loadAdminOverview();
+  }
+}
+function switchAdminTab(tab) { state.admin.tab = tab; loadAdmin(); }
+document.querySelectorAll('.subtab').forEach(t => t.addEventListener('click', () => switchAdminTab(t.dataset.admin)));
+
+async function loadAdminOverview() {
+  const box = document.getElementById('admin-content');
+  box.innerHTML = skeletonBlock();
   try {
     const [dash, perDay, top] = await Promise.all([
       api('/api/admin/dashboard', { auth: true }),
       api('/api/admin/stats/sessions-per-day?days=7', { auth: true }),
       api('/api/admin/stats/top-stations?limit=5', { auth: true }),
     ]);
+    const total = dash.totalStations;
 
-    let html = '<div class="stats">' + [
-      ['Total estaciones', dash.totalStations.toLocaleString('es-AR')],
-      ['Disponibles', dash.available.toLocaleString('es-AR')],
-      ['En uso', dash.inUse],
-      ['Fuera de servicio', dash.outOfService],
-      ['Sesiones activas', dash.activeSessions],
-      ['Energía total', dash.totalEnergyKwh + ' kWh'],
-      ['Recaudación', money(dash.totalRevenue)],
-    ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('') + '</div>';
+    let html = `<div class="kpis">
+      <div class="kpi"><div class="k">Estaciones</div><div class="v">${int(total)}</div><div class="s">${pct(dash.available, total)} disponibles</div></div>
+      <div class="kpi"><div class="k">Sesiones activas</div><div class="v">${int(dash.activeSessions)}</div><div class="s">${int(dash.inUse)} estaciones en uso</div></div>
+      <div class="kpi"><div class="k">Energía entregada</div><div class="v">${kwh(dash.totalEnergyKwh)}</div><div class="s">Acumulado histórico</div></div>
+      <div class="kpi"><div class="k">Recaudación</div><div class="v">${money(dash.totalRevenue)}</div><div class="s">Acumulado histórico</div></div>
+    </div>`;
 
-    html += '<div class="section-title">Sesiones por día (últimos 7)</div>';
+    const seg = [
+      ['Disponibles', dash.available, 'var(--ok-dot)'],
+      ['En uso', dash.inUse, 'var(--warn-dot)'],
+      ['Fuera de servicio', dash.outOfService, 'var(--bad-dot)'],
+    ];
+    html += `<div class="two-col">
+      <div class="card">
+        <div class="card-head"><h2>Estado de la red</h2><span class="num">${int(total)} estaciones</span></div>
+        <div class="card-body">
+          <div class="dist-bar">${seg.map(([, v, c]) => `<div style="width:${total ? v / total * 100 : 0}%;background:${c}"></div>`).join('')}</div>
+          <div class="legend">${seg.map(([k, v, c]) => `<div class="legend-item"><i style="background:${c}"></i>${k} <b>${int(v)}</b> <span class="cell-sub">(${pct(v, total)})</span></div>`).join('')}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Sesiones por día</h2><span>Últimos 7 días</span></div>
+        <div class="card-body">`;
     if (!perDay.length) {
-      html += '<div class="panel"><p class="note">Sin sesiones completadas aún. Iniciá y detené una carga para ver datos acá.</p></div>';
+      html += '<p class="cell-sub" style="margin:0;max-width:none">Sin sesiones completadas aún. Iniciá y detené una carga para ver datos acá.</p>';
     } else {
       const max = Math.max(...perDay.map(d => d.count));
-      html += '<div class="panel"><div class="bars">' + perDay.map(d => {
-        const day = new Date(d.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
-        return `<div class="bar-row"><span>${day}</span><div class="bar-track"><div class="bar-fill" style="width:${(d.count / max * 100)}%"></div></div><b>${d.count}</b></div>`;
-      }).join('') + '</div></div>';
+      html += '<div class="bars">' + perDay.map(d => {
+        const day = new Date(d.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', timeZone: 'UTC' });
+        return `<div class="bar-row"><span class="d">${day}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${d.count / max * 100}%"></div></div>
+          <span class="n"><b>${int(d.count)}</b> · ${kwh(d.energyKwh)}</span></div>`;
+      }).join('') + '</div>';
     }
+    html += '</div></div></div>';
 
-    html += '<div class="section-title">Cargadores más usados</div>';
+    html += '<div class="card"><div class="card-head"><h2>Cargadores más usados</h2><span>Top 5 por cantidad de sesiones</span></div>';
     if (!top.length) {
-      html += '<div class="panel"><p class="note">Todavía no hay ranking.</p></div>';
+      html += '<div class="empty"><div class="empty-icon">' + icon('chart') + '</div><h3>Todavía no hay ranking</h3><p>El ranking se arma a partir de las sesiones completadas.</p></div>';
     } else {
-      html += `<table class="data"><thead><tr><th>#</th><th>Estación</th><th>Sesiones</th><th>Energía</th><th>Recaudación</th></tr></thead><tbody>` +
-        top.map((t, i) => `<tr><td>${i + 1}</td><td><b>${esc(t.stationCode)}</b><br><span class="sub">${esc(t.address)}</span></td>
-        <td>${t.sessionCount}</td><td>${t.energyKwh} kWh</td><td><b>${money(t.revenue)}</b></td></tr>`).join('') + '</tbody></table>';
+      const maxRev = Math.max(...top.map(t => Number(t.revenue)));
+      html += `<div class="table-wrap"><table class="data"><thead><tr><th>#</th><th>Estación</th><th class="r">Sesiones</th><th class="r">Energía</th><th class="r">Recaudación</th></tr></thead><tbody>` +
+        top.map((t, i) => `<tr>
+          <td class="num">${i + 1}</td>
+          <td><div class="cell-main">${esc(t.stationCode)}</div><div class="cell-sub">${esc(t.address)}</div></td>
+          <td class="r num">${int(t.sessionCount)}</td>
+          <td class="r num">${kwh(t.energyKwh)}</td>
+          <td class="r"><div class="share"><div class="share-track"><div class="share-fill" style="width:${maxRev ? Number(t.revenue) / maxRev * 100 : 0}%"></div></div><span class="num cell-main">${money(t.revenue)}</span></div></td>
+        </tr>`).join('') + '</tbody></table></div>';
     }
+    html += '</div>';
     box.innerHTML = html;
   } catch (e) {
-    box.innerHTML = emptyState(esc(e.message));
+    box.innerHTML = errorState(e.message);
   }
+}
+
+// ============================================================
+//  Admin: gestión de estaciones
+// ============================================================
+function loadAdminStations() {
+  const f = state.admin.filters;
+  document.getElementById('admin-content').innerHTML = `
+    <div class="card">
+      <div class="toolbar">
+        <div class="field"><label for="as-status">Estado</label>
+          <select id="as-status" onchange="adminFilter('status', this.value)"><option value="">Todos</option>${selectOptions([[0, 'Disponible'], [1, 'En uso'], [2, 'Fuera de servicio']], f.status)}</select></div>
+        <div class="field"><label for="as-type">Tipo de cargador</label>
+          <select id="as-type" onchange="adminFilter('chargerType', this.value)"><option value="">Todos</option>${selectOptions(CHARGER_TYPES, f.chargerType)}</select></div>
+        <div class="field"><label for="as-operator">Operador</label>
+          <select id="as-operator" onchange="adminFilter('operator', this.value)"><option value="">Todos</option>${selectOptions(OPERATORS, f.operator)}</select></div>
+        <div class="grow"></div>
+        <span class="filter-count num" id="as-count"></span>
+      </div>
+      <div id="as-table"></div>
+      <div id="as-pager"></div>
+    </div>`;
+  fetchAdminStations(state.admin.page);
+}
+
+function adminFilter(key, value) {
+  state.admin.filters[key] = value;
+  fetchAdminStations(1);
+}
+
+async function fetchAdminStations(page) {
+  const { pageSize, filters: f } = state.admin;
+  state.admin.page = page;
+  const p = new URLSearchParams({ page, pageSize });
+  if (f.status !== '') p.set('status', f.status);
+  if (f.chargerType) p.set('chargerType', f.chargerType);
+  if (f.operator) p.set('operator', f.operator);
+
+  const table = document.getElementById('as-table');
+  const pager = document.getElementById('as-pager');
+  if (!table) return;
+  table.innerHTML = '<div class="card-body">' + '<div class="skeleton" style="height:14px;margin:12px 0"></div>'.repeat(8) + '</div>';
+  pager.innerHTML = '';
+  try {
+    const data = await api('/api/stations?' + p.toString());
+    const pages = Math.max(1, Math.ceil(data.total / pageSize));
+    // Si se eliminó el último registro de la página, volver a la anterior.
+    if (page > pages) return fetchAdminStations(pages);
+
+    state.admin.total = data.total;
+    state.admin.items = Object.fromEntries(data.items.map(s => [s.id, s]));
+    document.getElementById('as-count').textContent = `${int(data.total)} estaciones`;
+
+    if (!data.items.length) {
+      table.innerHTML = `<div class="empty"><div class="empty-icon">${icon('search')}</div><h3>Sin resultados</h3><p>No hay estaciones con esos filtros.</p></div>`;
+      return;
+    }
+    table.innerHTML = `<div class="table-wrap"><table class="data compact"><thead><tr>
+      <th>Código</th><th>Dirección</th><th>Operador</th><th>Tipo</th><th class="r">Potencia</th><th class="r">Precio</th><th>Estado</th><th class="r">Acciones</th>
+      </tr></thead><tbody>${data.items.map(adminStationRow).join('')}</tbody></table></div>`;
+    pager.innerHTML = `<div class="card-foot">${pagerHtml(data.total, page, pageSize, 'fetchAdminStations')}</div>`;
+    state.admin.highlight = null;
+  } catch (e) {
+    table.innerHTML = `<div class="empty error"><div class="empty-icon">${icon('alert')}</div><h3>No se pudo cargar la información</h3><p>${esc(e.message)}</p></div>`;
+  }
+}
+
+function adminStationRow(s) {
+  const st = STATION_STATUS[s.status] || STATION_STATUS[0];
+  // Con una carga en curso no se permite dar de baja ni eliminar: la sesión quedaría huérfana.
+  const inUse = s.status === 1;
+  const lock = inUse ? 'disabled' : '';
+  const lockTitle = 'Tiene una carga en curso';
+  const id = esc(s.id);
+  const toggle = s.status === 2
+    ? `<button class="btn sm ghost" onclick="reactivateStation('${id}')">${icon('play')}Reactivar</button>`
+    : `<button class="btn sm ghost" ${lock} title="${inUse ? lockTitle : 'Marcar fuera de servicio'}" onclick="markOutOfService('${id}')">${icon('ban')}Dar de baja</button>`;
+  return `<tr class="${s.id === state.admin.highlight ? 'flash' : ''}">
+    <td class="cell-main">${esc(s.stationId)}</td>
+    <td><div class="cell-sub" style="font-size:13.5px;color:var(--ink-2);max-width:200px" title="${esc(s.address)}">${esc(s.address)}</div></td>
+    <td>${esc(s.operator)}</td>
+    <td>${esc(s.chargerType)}</td>
+    <td class="r num">${s.capacityKw} kW</td>
+    <td class="r num">${money(s.costPerKwh)}</td>
+    <td><span class="status ${st.cls}">${st.label}</span></td>
+    <td><div class="row-actions">
+      <button class="btn sm ghost" onclick="openStationForm('${id}')">${icon('pencil')}Editar</button>
+      ${toggle}
+      <button class="btn sm ghost danger icon" ${lock} title="${inUse ? lockTitle : 'Eliminar'}" aria-label="Eliminar" onclick="deleteStation('${id}')">${icon('trash')}</button>
+    </div></td>
+  </tr>`;
+}
+
+function openStationForm(id = null) {
+  const s = id ? state.admin.items[id] : null;
+  const isEdit = !!s;
+  const $ = el => document.getElementById(el);
+  state.admin.editing = s;
+
+  $('stationTitle').textContent = isEdit ? `Editar estación ${s.stationId}` : 'Nueva estación';
+  $('stationHint').textContent = isEdit ? 'El código y la ubicación no se pueden modificar.' : 'Completá los datos del nuevo punto de carga.';
+  $('stationSubmit').textContent = isEdit ? 'Guardar cambios' : 'Crear estación';
+  document.querySelectorAll('#stationForm .create-only').forEach(el => el.style.display = isEdit ? 'none' : '');
+  document.querySelectorAll('#stationForm .edit-only').forEach(el => el.style.display = isEdit ? '' : 'none');
+  setAlert('stationErr', '');
+
+  $('s-code').value = s?.stationId ?? '';
+  $('s-lat').value = s?.latitude ?? '';
+  $('s-lng').value = s?.longitude ?? '';
+  ['s-code', 's-lat', 's-lng'].forEach(f => $(f).disabled = isEdit);
+  $('s-address').value = s?.address ?? '';
+  $('s-operator').innerHTML = selectOptions(withValue(OPERATORS, s?.operator), s?.operator ?? OPERATORS[0]);
+  $('s-type').innerHTML = selectOptions(withValue(CHARGER_TYPES, s?.chargerType), s?.chargerType ?? 'AC Level 2');
+  $('s-avail').innerHTML = selectOptions(withValue(AVAILABILITY, s?.availability), s?.availability ?? '24/7');
+  $('s-cap').value = s?.capacityKw ?? '';
+  $('s-cost').value = s?.costPerKwh ?? '';
+  $('s-parking').value = s?.parkingSpots ?? '';
+  $('s-year').value = new Date().getFullYear();
+  $('s-maint').innerHTML = selectOptions(MAINTENANCE, 'Quarterly');
+  $('s-renew').checked = !!s?.renewableEnergy;
+
+  const current = s?.connectorTypes ?? [];
+  $('s-connectors').innerHTML = [...CONNECTORS, ...current.filter(c => !CONNECTORS.includes(c))]
+    .map(c => `<label class="check"><input type="checkbox" value="${esc(c)}" ${current.includes(c) ? 'checked' : ''} />${esc(c)}</label>`).join('');
+
+  // "En uso" lo gestionan las sesiones de carga, no se asigna a mano.
+  const status = s?.status ?? 0;
+  $('s-status').innerHTML = [[0, 'Disponible'], [1, 'En uso'], [2, 'Fuera de servicio']]
+    .map(([v, l]) => `<option value="${v}" ${v === status ? 'selected' : ''} ${v === 1 ? 'disabled' : ''}>${l}</option>`).join('');
+  $('s-status').disabled = status === 1;
+  $('s-status-hint').textContent = status === 1 ? 'Tiene una carga en curso: el estado se libera al finalizarla.' : '';
+
+  $('stationModal').classList.add('show');
+  $('stationForm').scrollTop = 0;
+  setTimeout(() => $(isEdit ? 's-address' : 's-code').focus(), 50);
+}
+
+function closeStationForm() {
+  document.getElementById('stationModal').classList.remove('show');
+  state.admin.editing = null;
+}
+
+async function submitStation() {
+  const $ = el => document.getElementById(el);
+  const num = el => $(el).value.trim() === '' ? null : Number($(el).value);
+  const s = state.admin.editing;
+  const isEdit = !!s;
+
+  const code = $('s-code').value.trim();
+  const address = $('s-address').value.trim();
+  const lat = num('s-lat'), lng = num('s-lng');
+  const capacityKw = num('s-cap'), costPerKwh = num('s-cost');
+  const parkingSpots = num('s-parking') ?? 0;
+  const installationYear = num('s-year');
+  const connectorTypes = [...document.querySelectorAll('#s-connectors input:checked')].map(i => i.value);
+
+  const error =
+    (!isEdit && !code) ? 'Ingresá el código de la estación.' :
+    !address ? 'Ingresá la dirección.' :
+    (!isEdit && (lat === null || lat < -90 || lat > 90)) ? 'La latitud debe estar entre -90 y 90.' :
+    (!isEdit && (lng === null || lng < -180 || lng > 180)) ? 'La longitud debe estar entre -180 y 180.' :
+    (capacityKw === null || !Number.isInteger(capacityKw) || capacityKw < 1 || capacityKw > 1000) ? 'La potencia debe ser un número entero entre 1 y 1000 kW.' :
+    (costPerKwh === null || costPerKwh < 0 || costPerKwh > 100) ? 'El costo debe estar entre 0 y 100 USD/kWh.' :
+    (!Number.isInteger(parkingSpots) || parkingSpots < 0) ? 'Los lugares de estacionamiento deben ser un número entero mayor o igual a 0.' :
+    (!isEdit && (installationYear === null || !Number.isInteger(installationYear) || installationYear < 1900 || installationYear > 2100)) ? 'Ingresá un año de instalación válido.' :
+    !connectorTypes.length ? 'Seleccioná al menos un conector.' : '';
+  if (error) return setAlert('stationErr', error);
+  setAlert('stationErr', '');
+
+  const common = {
+    address, chargerType: $('s-type').value, costPerKwh, availability: $('s-avail').value,
+    operator: $('s-operator').value, capacityKw, connectorTypes,
+    renewableEnergy: $('s-renew').checked, parkingSpots,
+  };
+
+  const btn = $('stationSubmit');
+  btn.classList.add('loading');
+  try {
+    if (isEdit) {
+      const body = { ...common };
+      if (s.status !== 1) body.status = Number($('s-status').value);
+      await api(`/api/admin/stations/${encodeURIComponent(s.id)}`, { method: 'PUT', auth: true, body });
+      closeStationForm();
+      toast(`Estación ${s.stationId} actualizada`, 'ok');
+      state.admin.highlight = s.id;
+      fetchAdminStations(state.admin.page);
+    } else {
+      const created = await api('/api/admin/stations', {
+        method: 'POST', auth: true,
+        body: { ...common, stationId: code, latitude: lat, longitude: lng, installationYear, maintenanceFrequency: $('s-maint').value },
+      });
+      closeStationForm();
+      toast(`Estación ${created.stationId} creada`, 'ok');
+      // Las altas quedan al final del listado: se quitan los filtros y se va a la última página.
+      const { total } = await api('/api/stations?pageSize=1');
+      state.admin.filters = { status: '', chargerType: '', operator: '' };
+      state.admin.page = Math.max(1, Math.ceil(total / state.admin.pageSize));
+      state.admin.highlight = created.id;
+      loadAdminStations();
+    }
+  } catch (e) {
+    setAlert('stationErr', e.message);
+    $('stationForm').scrollTop = 0;
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+function confirmDialog({ title, message, confirmText = 'Confirmar', danger = false }) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('confirmModal');
+    const ok = document.getElementById('confirmOk');
+    const cancel = document.getElementById('confirmCancel');
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMsg').textContent = message;
+    ok.textContent = confirmText;
+    ok.className = 'btn ' + (danger ? 'danger-solid' : 'primary');
+    const done = value => {
+      modal.classList.remove('show');
+      ok.onclick = cancel.onclick = null;
+      state.confirmDone = null;
+      resolve(value);
+    };
+    state.confirmDone = done;
+    ok.onclick = () => done(true);
+    cancel.onclick = () => done(false);
+    modal.classList.add('show');
+    ok.focus();
+  });
+}
+
+async function markOutOfService(id) {
+  const s = state.admin.items[id];
+  const ok = await confirmDialog({
+    title: 'Dar de baja la estación',
+    message: `${s.stationId} pasará a "Fuera de servicio" y no se podrán iniciar cargas en ella. Podés reactivarla más tarde.`,
+    confirmText: 'Dar de baja',
+  });
+  if (!ok) return;
+  try {
+    await api(`/api/admin/stations/${encodeURIComponent(id)}/out-of-service`, { method: 'PATCH', auth: true });
+    toast(`${s.stationId} marcada fuera de servicio`, 'ok');
+    state.admin.highlight = id;
+    fetchAdminStations(state.admin.page);
+  } catch (e) { toast(e.message, 'err'); }
+}
+
+async function reactivateStation(id) {
+  const s = state.admin.items[id];
+  try {
+    await api(`/api/admin/stations/${encodeURIComponent(id)}`, { method: 'PUT', auth: true, body: { status: 0 } });
+    toast(`${s.stationId} vuelve a estar disponible`, 'ok');
+    state.admin.highlight = id;
+    fetchAdminStations(state.admin.page);
+  } catch (e) { toast(e.message, 'err'); }
+}
+
+async function deleteStation(id) {
+  const s = state.admin.items[id];
+  const ok = await confirmDialog({
+    title: 'Eliminar estación',
+    message: `Se eliminará ${s.stationId} de forma permanente. Esta acción no se puede deshacer.`,
+    confirmText: 'Eliminar',
+    danger: true,
+  });
+  if (!ok) return;
+  try {
+    await api(`/api/admin/stations/${encodeURIComponent(id)}`, { method: 'DELETE', auth: true });
+    toast(`${s.stationId} eliminada`, 'ok');
+    fetchAdminStations(state.admin.page);
+  } catch (e) { toast(e.message, 'err'); }
 }
 
 // ============================================================
 //  Init
 // ============================================================
-document.getElementById('a-pass').addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(); });
+document.querySelectorAll('#authModal input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(); }));
+document.getElementById('authModal').addEventListener('mousedown', e => { if (e.target.id === 'authModal') closeAuth(); });
+document.getElementById('stationModal').addEventListener('mousedown', e => { if (e.target.id === 'stationModal') closeStationForm(); });
+document.getElementById('confirmModal').addEventListener('mousedown', e => { if (e.target.id === 'confirmModal' && state.confirmDone) state.confirmDone(false); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  // Cierra solo el diálogo de más arriba.
+  if (state.confirmDone) state.confirmDone(false);
+  else if (document.getElementById('stationModal').classList.contains('show')) closeStationForm();
+  else closeAuth();
+});
+document.querySelectorAll('#exploreFilters input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(1); }));
+document.querySelectorAll('#exploreFilters select, #f-renew').forEach(i => i.addEventListener('change', updateFilterCount));
+document.querySelectorAll('#nearbyFilters input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') doNearby(); }));
 renderAuthArea();
 doSearch(1);
 </script>

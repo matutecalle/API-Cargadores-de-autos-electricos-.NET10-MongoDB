@@ -1,6 +1,7 @@
 using APICargadores.DTOs;
 using APICargadores.Models;
 using APICargadores.Repositories;
+using MongoDB.Driver;
 using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace APICargadores.Services;
@@ -32,9 +33,13 @@ public class StationService : IStationService
 
     public async Task<StationDto> CreateAsync(CreateStationDto dto)
     {
+        var code = dto.StationId.Trim();
+        if (await _stations.GetByStationCodeAsync(code) is not null)
+            throw new InvalidOperationException($"Ya existe una estación con el código {code}.");
+
         var station = new Station
         {
-            StationId = dto.StationId,
+            StationId = code,
             Address = dto.Address,
             Latitude = dto.Latitude,
             Longitude = dto.Longitude,
@@ -52,7 +57,15 @@ public class StationService : IStationService
             Status = StationStatus.Available
         };
 
-        await _stations.CreateAsync(station);
+        try
+        {
+            await _stations.CreateAsync(station);
+        }
+        catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+        {
+            // Dos altas simultáneas con el mismo código: el índice único frena la segunda.
+            throw new InvalidOperationException($"Ya existe una estación con el código {code}.");
+        }
         return ToDto(station);
     }
 

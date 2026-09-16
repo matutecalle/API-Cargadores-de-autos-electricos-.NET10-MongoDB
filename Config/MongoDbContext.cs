@@ -6,7 +6,7 @@ namespace APICargadores.Config;
 
 /// <summary>
 /// Punto único de acceso a la base de datos. Expone las colecciones tipadas y
-/// crea los índices necesarios (2dsphere para geo, único para email).
+/// crea los índices necesarios (2dsphere para geo, únicos para email y código de estación).
 /// </summary>
 public class MongoDbContext
 {
@@ -29,6 +29,11 @@ public class MongoDbContext
         // Índice geoespacial para búsquedas "cargadores cercanos" ($near).
         Stations.Indexes.CreateOne(new CreateIndexModel<Station>(
             Builders<Station>.IndexKeys.Geo2DSphere(s => s.Location)));
+
+        // Código de estación único (ej. "EVS00001"): garantía a nivel base de datos.
+        Stations.Indexes.CreateOne(new CreateIndexModel<Station>(
+            Builders<Station>.IndexKeys.Ascending(s => s.StationId),
+            new CreateIndexOptions { Unique = true }));
 
         // Email único para autenticación.
         Users.Indexes.CreateOne(new CreateIndexModel<User>(

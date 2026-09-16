@@ -44,9 +44,16 @@ public class AdminController : ControllerBase
     [HttpPost("stations")]
     public async Task<IActionResult> Create(CreateStationDto dto)
     {
-        var created = await _stations.CreateAsync(dto);
-        return CreatedAtAction(nameof(StationsController.GetById),
-            "Stations", new { id = created.Id }, created);
+        try
+        {
+            var created = await _stations.CreateAsync(dto);
+            return CreatedAtAction(nameof(StationsController.GetById),
+                "Stations", new { id = created.Id }, created);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
     }
 
     /// <summary>Edita un cargador (parcial).</summary>

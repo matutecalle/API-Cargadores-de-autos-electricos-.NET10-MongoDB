@@ -19,8 +19,11 @@ public class SessionRepository : ISessionRepository
         return session;
     }
 
+    // Un id con formato inválido se trata como "no encontrado" (evita un 500 del driver).
     public async Task<ChargingSession?> GetByIdAsync(string id) =>
-        await _sessions.Find(s => s.Id == id).FirstOrDefaultAsync();
+        ObjectId.TryParse(id, out _)
+            ? await _sessions.Find(s => s.Id == id).FirstOrDefaultAsync()
+            : null;
 
     public async Task<ChargingSession?> GetActiveByStationAsync(string stationId) =>
         await _sessions.Find(s => s.StationId == stationId && s.Status == SessionStatus.Active)
@@ -33,6 +36,7 @@ public class SessionRepository : ISessionRepository
 
     public async Task<bool> ReplaceAsync(string id, ChargingSession session)
     {
+        if (!ObjectId.TryParse(id, out _)) return false;
         var result = await _sessions.ReplaceOneAsync(s => s.Id == id, session);
         return result.ModifiedCount > 0;
     }
